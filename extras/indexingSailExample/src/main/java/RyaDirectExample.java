@@ -1,13 +1,6 @@
 
 import java.util.List;
 
-import mvm.rya.accumulo.AccumuloRdfConfiguration;
-import mvm.rya.api.RdfCloudTripleStoreConfiguration;
-import mvm.rya.indexing.RyaSailFactory;
-import mvm.rya.indexing.accumulo.ConfigUtils;
-import mvm.rya.indexing.accumulo.geo.GeoConstants;
-import mvm.rya.indexing.external.tupleSet.AccumuloIndexSet;
-
 import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.Connector;
@@ -41,6 +34,13 @@ import org.openrdf.repository.sail.SailRepositoryConnection;
 import org.openrdf.sail.Sail;
 import org.openrdf.sail.SailException;
 
+import mvm.rya.accumulo.AccumuloRdfConfiguration;
+import mvm.rya.api.RdfCloudTripleStoreConfiguration;
+import mvm.rya.indexing.RyaSailFactory;
+import mvm.rya.indexing.accumulo.ConfigUtils;
+import mvm.rya.indexing.accumulo.geo.GeoConstants;
+import mvm.rya.indexing.external.tupleSet.AccumuloIndexSet;
+
 public class RyaDirectExample {
     private static final Logger log = Logger.getLogger(RyaDirectExample.class);
 
@@ -53,27 +53,27 @@ public class RyaDirectExample {
     private static final String INSTANCE = "instance";
     private static final String RYA_TABLE_PREFIX = "x_test_triplestore_";
     private static final String AUTHS = "";
-    
-    
-    
+
+
+
     public static void main(String[] args) throws Exception {
         Configuration conf = getConf();
         conf.setBoolean(ConfigUtils.DISPLAY_QUERY_PLAN, PRINT_QUERIES);
-        
+
         log.info("Creating the tables as root.");
 //        createTables(addRootConf(conf), conf);
 
         SailRepository repository = null;
         SailRepositoryConnection conn = null;
-      
+
         try {
             log.info("Connecting to Indexing Sail Repository.");
-            
+
             Sail extSail = RyaSailFactory.getInstance(conf);
             repository = new SailRepository(extSail);
             repository.initialize();
             conn = repository.getConnection();
-            
+
             createPCJ(conn);
 
             long start = System.currentTimeMillis();
@@ -91,6 +91,12 @@ public class RyaDirectExample {
             testTemporalFreeGeoSearch(conn);
             log.info("Running SPARQL Example: Geo, Freetext, and PCJ Search");
             testGeoFreetextWithPCJSearch(conn);
+            log.info("Running SPARQL Example: Delete Temporal Data");
+            testDeleteTemporalData(conn);
+            log.info("Running SPARQL Example: Delete Free Text Data");
+            testDeleteFreeTextData(conn);
+            log.info("Running SPARQL Example: Delete Geo Data");
+            testDeleteGeoData(conn);
 
             log.info("TIME: " + (System.currentTimeMillis() - start) / 1000.);
         } finally {
@@ -182,10 +188,10 @@ public class RyaDirectExample {
 
         Validate.isTrue(resultHandler.getCount() == 0);
     }
-    
-    
+
+
     private static void testPCJSearch(SailRepositoryConnection conn) throws Exception {
-        
+
         String queryString;
         TupleQuery tupleQuery;
         CountingResultHandler tupleHandler;
@@ -203,7 +209,7 @@ public class RyaDirectExample {
         tupleQuery.evaluate(tupleHandler);
         log.info("Result count : " + tupleHandler.getCount());
         Validate.isTrue(tupleHandler.getCount() == 1);
-           
+
      // ///////////// search for bob
         queryString = "PREFIX fts: <http://rdf.useekm.com/fts#>  "//
                 + "SELECT ?e ?c ?l ?o " //
@@ -217,13 +223,13 @@ public class RyaDirectExample {
         tupleHandler = new CountingResultHandler();
         tupleQuery.evaluate(tupleHandler);
         log.info("Result count : " + tupleHandler.getCount());
-        Validate.isTrue(tupleHandler.getCount() == 2);    
-        
-    }
-    
+        Validate.isTrue(tupleHandler.getCount() == 2);
 
-    
-    
+    }
+
+
+
+
     private static void testAddAndTemporalSearchWithPCJ(SailRepositoryConnection conn) throws Exception {
 
         // create some resources and literals to make statements out of
@@ -235,14 +241,15 @@ public class RyaDirectExample {
                 + "     time:inXSDDateTime '2001-01-01T04:01:02.000-05:00'^^<http://www.w3.org/2001/XMLSchema#dateTime> ;\n" //   2 seconds
                 + "     time:inXSDDateTime \"2001-01-01T01:01:03-08:00\" ;\n" //   3 seconds
                 + "     time:inXSDDateTime '2001-01-01T01:01:04-08:00' ;\n" //   4 seconds
-                + "     time:inXSDDateTime '2001-01-01T09:01:05Z' ;\n"   
-                + "     time:inXSDDateTime '2006-01-01' ;\n" 
-                + "     time:inXSDDateTime '2007-01-01' ;\n" 
+                + "     time:inXSDDateTime '2001-01-01T09:01:05Z' ;\n"
+                + "     time:inXSDDateTime '2006-01-01' ;\n"
+                + "     time:inXSDDateTime '2007-01-01' ;\n"
                 + "     time:inXSDDateTime '2008-01-01' ; .\n"
                 + "}";
 
         Update update = conn.prepareUpdate(QueryLanguage.SPARQL, sparqlInsert);
         update.execute();
+
 
         // Find all stored dates.
         String queryString = "PREFIX time: <http://www.w3.org/2006/time#> \n"//
@@ -252,15 +259,15 @@ public class RyaDirectExample {
                 + "  ?event time:inXSDDateTime ?time . \n"//
                 + "  FILTER(tempo:after(?time, '2001-01-01T01:01:03-08:00') ) \n"// after 3 seconds
                 + "}";//
-       
-        
+
+
 
         TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, queryString);
         CountingResultHandler tupleHandler = new CountingResultHandler();
         tupleQuery.evaluate(tupleHandler);
         log.info("Result count : " + tupleHandler.getCount());
         Validate.isTrue(tupleHandler.getCount() == 5);
-        
+
         // Find all stored dates.
         queryString = "PREFIX time: <http://www.w3.org/2006/time#> \n"//
                 + "PREFIX tempo: <tag:rya-rdf.org,2015:temporal#> \n"//
@@ -301,10 +308,6 @@ public class RyaDirectExample {
     }
 
 
-
-
-
-
     private static void testAddAndFreeTextSearchWithPCJ(SailRepositoryConnection conn) throws Exception {
         // add data to the repository using the SailRepository add methods
         ValueFactory f = conn.getValueFactory();
@@ -319,7 +322,7 @@ public class RyaDirectExample {
         uuid = "urn:people:bobss";
         conn.add(f.createURI(uuid), RDF.TYPE, person);
         conn.add(f.createURI(uuid), RDFS.LABEL, f.createLiteral("Bob Snob Hose", "en"));
-        
+
         String queryString;
         TupleQuery tupleQuery;
         CountingResultHandler tupleHandler;
@@ -336,7 +339,7 @@ public class RyaDirectExample {
         tupleQuery.evaluate(tupleHandler);
         log.info("Result count : " + tupleHandler.getCount());
         Validate.isTrue(tupleHandler.getCount() == 1);
-        
+
 
         // ///////////// search for alice and bob
         queryString = "PREFIX fts: <http://rdf.useekm.com/fts#>  "//
@@ -351,7 +354,7 @@ public class RyaDirectExample {
         tupleQuery.evaluate(tupleHandler);
         log.info("Result count : " + tupleHandler.getCount());
         Validate.isTrue(tupleHandler.getCount() == 2);
-        
+
      // ///////////// search for alice and bob
         queryString = "PREFIX fts: <http://rdf.useekm.com/fts#>  "//
                 + "SELECT ?person ?match " //
@@ -366,8 +369,8 @@ public class RyaDirectExample {
         tupleQuery.evaluate(tupleHandler);
         log.info("Result count : " + tupleHandler.getCount());
         Validate.isTrue(tupleHandler.getCount() == 1);
-        
-        
+
+
         // ///////////// search for bob
         queryString = "PREFIX fts: <http://rdf.useekm.com/fts#>  "//
                 + "SELECT ?person ?match ?e ?c ?l ?o " //
@@ -402,11 +405,11 @@ public class RyaDirectExample {
 
         Update u = conn.prepareUpdate(QueryLanguage.SPARQL, update);
         u.execute();
-        
+
         String queryString;
         TupleQuery tupleQuery;
         CountingResultHandler tupleHandler;
-        
+
         // point outside search ring
         queryString = "PREFIX geo: <http://www.opengis.net/ont/geosparql#>  "//
                 + "PREFIX geof: <http://www.opengis.net/def/function/geosparql/>  "//
@@ -423,7 +426,8 @@ public class RyaDirectExample {
         tupleQuery.evaluate(tupleHandler);
         log.info("Result count : " + tupleHandler.getCount());
         Validate.isTrue(tupleHandler.getCount() == 0);
-        
+
+
         // point inside search ring
         queryString = "PREFIX geo: <http://www.opengis.net/ont/geosparql#>  "//
                 + "PREFIX geof: <http://www.opengis.net/def/function/geosparql/>  "//
@@ -438,14 +442,14 @@ public class RyaDirectExample {
                 + "  ?point geo:asWKT ?wkt . "//
                 + "  FILTER(geof:sfWithin(?wkt, \"POLYGON((-78 39, -77 39, -77 38, -78 38, -78 39))\"^^geo:wktLiteral)) " //
                 + "}";//
-         
+
         tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, queryString);
         tupleHandler = new CountingResultHandler();
         tupleQuery.evaluate(tupleHandler);
         log.info("Result count : " + tupleHandler.getCount());
         Validate.isTrue(tupleHandler.getCount() == 1);
-        
-             
+
+
         // point inside search ring with Pre-Computed Join
         queryString = "PREFIX geo: <http://www.opengis.net/ont/geosparql#>  "//
                 + "PREFIX geof: <http://www.opengis.net/def/function/geosparql/>  "//
@@ -460,7 +464,7 @@ public class RyaDirectExample {
                 + "  ?point geo:asWKT ?wkt . "//
                 + "  FILTER(geof:sfWithin(?wkt, \"POLYGON((-78 39, -77 39, -77 38, -78 38, -78 39))\"^^geo:wktLiteral)) " //
                 + "}";//
-         
+
         tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, queryString);
         tupleHandler = new CountingResultHandler();
         tupleQuery.evaluate(tupleHandler);
@@ -486,7 +490,7 @@ public class RyaDirectExample {
         tupleQuery.evaluate(tupleHandler);
         log.info("Result count : " + tupleHandler.getCount());
         Validate.isTrue(tupleHandler.getCount() == 0);
-        
+
         // point inside search ring with different Pre-Computed Join
         queryString = "PREFIX geo: <http://www.opengis.net/ont/geosparql#>  "//
                 + "PREFIX geof: <http://www.opengis.net/def/function/geosparql/>  "//
@@ -507,12 +511,12 @@ public class RyaDirectExample {
         log.info("Result count : " + tupleHandler.getCount());
         Validate.isTrue(tupleHandler.getCount() == 1);
     }
-    
-    
-    private static void testTemporalFreeGeoSearch(SailRepositoryConnection conn) throws MalformedQueryException, 
+
+
+    private static void testTemporalFreeGeoSearch(SailRepositoryConnection conn) throws MalformedQueryException,
     RepositoryException, UpdateExecutionException, TupleQueryResultHandlerException, QueryEvaluationException {
-        
-        
+
+
         String queryString;
         TupleQuery tupleQuery;
         CountingResultHandler tupleHandler;
@@ -537,21 +541,21 @@ public class RyaDirectExample {
                 + "  ?person <http://www.w3.org/2000/01/rdf-schema#label> ?match . "//
                 + "  FILTER(fts:text(?match, \"pal*\")) " //
                 + "}";//
-        
-        
-        
+
+
+
         tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, queryString);
 
         tupleHandler = new CountingResultHandler();
         tupleQuery.evaluate(tupleHandler);
         log.info("Result count : " + tupleHandler.getCount());
-        Validate.isTrue(tupleHandler.getCount() == 5); 
-        
+        Validate.isTrue(tupleHandler.getCount() == 5);
+
     }
-    
-    
-    
-    private static void testGeoFreetextWithPCJSearch(SailRepositoryConnection conn) throws MalformedQueryException, 
+
+
+
+    private static void testGeoFreetextWithPCJSearch(SailRepositoryConnection conn) throws MalformedQueryException,
     RepositoryException, TupleQueryResultHandlerException, QueryEvaluationException {
      // ring outside point
         String queryString = "PREFIX geo: <http://www.opengis.net/ont/geosparql#>  "//
@@ -577,12 +581,122 @@ public class RyaDirectExample {
         log.info("Result count : " + tupleHandler.getCount());
         Validate.isTrue(tupleHandler.getCount() == 1);
     }
-    
-    
-    
-    private static void createPCJ(SailRepositoryConnection conn) 
+
+
+    private static void testDeleteTemporalData(SailRepositoryConnection conn) throws Exception {
+        // Delete all stored dates
+        String sparqlDelete = "PREFIX time: <http://www.w3.org/2006/time#>\n"
+                + "PREFIX tempo: <tag:rya-rdf.org,2015:temporal#> \n"//
+                + "DELETE {\n" //
+                + "  ?event time:inXSDDateTime ?time . \n"
+                + "}\n"
+                + "WHERE { \n"
+                + "  ?event time:inXSDDateTime ?time . \n"//
+                + "}";//
+
+        Update deleteUpdate = conn.prepareUpdate(QueryLanguage.SPARQL, sparqlDelete);
+        deleteUpdate.execute();
+
+
+        // Find all stored dates.
+        String queryString = "PREFIX time: <http://www.w3.org/2006/time#> \n"//
+                + "PREFIX tempo: <tag:rya-rdf.org,2015:temporal#> \n"//
+                + "SELECT ?event ?time \n" //
+                + "WHERE { \n"
+                + "  ?event time:inXSDDateTime ?time . \n"//
+                + "  FILTER(tempo:after(?time, '2001-01-01T01:01:03-08:00') ) \n"// after 3 seconds
+                + "}";//
+
+
+        CountingResultHandler tupleHandler = new CountingResultHandler();
+        TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, queryString);
+        tupleQuery.evaluate(tupleHandler);
+        log.info("Result count : " + tupleHandler.getCount());
+        Validate.isTrue(tupleHandler.getCount() == 0);
+    }
+
+
+    private static void testDeleteFreeTextData(SailRepositoryConnection conn) throws Exception {
+        // Delete data from the repository using the SailRepository remove methods
+        ValueFactory f = conn.getValueFactory();
+        URI person = f.createURI("http://example.org/ontology/Person");
+
+        String uuid;
+
+        uuid = "urn:people:alice";
+        conn.remove(f.createURI(uuid), RDF.TYPE, person);
+        conn.remove(f.createURI(uuid), RDFS.LABEL, f.createLiteral("Alice Palace Hose", f.createURI("xsd:string")));
+
+        uuid = "urn:people:bobss";
+        conn.remove(f.createURI(uuid), RDF.TYPE, person);
+        conn.remove(f.createURI(uuid), RDFS.LABEL, f.createLiteral("Bob Snob Hose", "en"));
+
+        conn.remove(person, RDFS.LABEL, f.createLiteral("label", "en"));
+
+        String queryString;
+        TupleQuery tupleQuery;
+        CountingResultHandler tupleHandler;
+
+        // Find all
+        queryString = "PREFIX fts: <http://rdf.useekm.com/fts#>  "//
+                + "SELECT ?person ?match " //
+                + "{" //
+                + "  ?person <http://www.w3.org/2000/01/rdf-schema#label> ?match . "//
+                + "  ?person a <http://example.org/ontology/Person> . "//
+                + "}";//
+        tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, queryString);
+        tupleHandler = new CountingResultHandler();
+        tupleQuery.evaluate(tupleHandler);
+        log.info("Result count : " + tupleHandler.getCount());
+        Validate.isTrue(tupleHandler.getCount() == 0);
+    }
+
+
+    private static void testDeleteGeoData(SailRepositoryConnection conn) throws Exception {
+        // Delete all stored points
+        String sparqlDelete = "PREFIX geo: <http://www.opengis.net/ont/geosparql#>  "//
+                + "PREFIX geof: <http://www.opengis.net/def/function/geosparql/>  "//
+                + "DELETE {\n" //
+                + "  ?feature a geo:Feature . "//
+                + "  ?feature geo:hasGeometry ?point . "//
+                + "  ?point a geo:Point . "//
+                + "  ?point geo:asWKT ?wkt . "//
+                + "}\n"
+                + "WHERE { \n"
+                + "  ?feature a geo:Feature . "//
+                + "  ?feature geo:hasGeometry ?point . "//
+                + "  ?point a geo:Point . "//
+                + "  ?point geo:asWKT ?wkt . "//
+                + "}";//
+
+        Update deleteUpdate = conn.prepareUpdate(QueryLanguage.SPARQL, sparqlDelete);
+        deleteUpdate.execute();
+
+        String queryString;
+        TupleQuery tupleQuery;
+        CountingResultHandler tupleHandler;
+
+        // Find all stored points
+        queryString = "PREFIX geo: <http://www.opengis.net/ont/geosparql#>  "//
+                + "PREFIX geof: <http://www.opengis.net/def/function/geosparql/>  "//
+                + "SELECT ?feature ?point ?wkt " //
+                + "{" //
+                + "  ?feature a geo:Feature . "//
+                + "  ?feature geo:hasGeometry ?point . "//
+                + "  ?point a geo:Point . "//
+                + "  ?point geo:asWKT ?wkt . "//
+                + "}";//
+        tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, queryString);
+        tupleHandler = new CountingResultHandler();
+        tupleQuery.evaluate(tupleHandler);
+        log.info("Result count : " + tupleHandler.getCount());
+        Validate.isTrue(tupleHandler.getCount() == 0);
+    }
+
+
+    private static void createPCJ(SailRepositoryConnection conn)
             throws RepositoryException, AccumuloException, AccumuloSecurityException, TableExistsException {
-        
+
         String queryString1 = ""//
                 + "SELECT ?e ?c ?l ?o " //
                 + "{" //
@@ -590,7 +704,7 @@ public class RyaDirectExample {
                 + "  ?e <http://www.w3.org/2000/01/rdf-schema#label> ?l . "//
                 + "  ?e <uri:talksTo> ?o . "//
                 + "}";//
-        
+
         String queryString2 = ""//
                 + "SELECT ?e ?c ?l ?o " //
                 + "{" //
@@ -598,8 +712,8 @@ public class RyaDirectExample {
                 + "  ?e <http://www.w3.org/2000/01/rdf-schema#label> ?l . "//
                 + "  ?e <uri:talksTo> ?o . "//
                 + "}";//
-        
-        
+
+
         URI obj,subclass,talksTo;
         URI person = new URIImpl("urn:people:alice");
         URI feature = new URIImpl("urn:feature");
@@ -613,33 +727,24 @@ public class RyaDirectExample {
         conn.add(sub, RDF.TYPE, subclass);
         conn.add(sub, RDFS.LABEL, new LiteralImpl("label"));
         conn.add(sub, talksTo, obj);
-       
-        AccumuloIndexSet ais1 = null; 
-        AccumuloIndexSet ais2 = null; 
+
+        AccumuloIndexSet ais1 = null;
+        AccumuloIndexSet ais2 = null;
         String tablename1 = RYA_TABLE_PREFIX + "INDEX_1";
         String tablename2 = RYA_TABLE_PREFIX + "INDEX_2";
 
         Connector accCon = new MockInstance(INSTANCE).getConnector("root", new PasswordToken("".getBytes()));
         accCon.tableOperations().create(tablename1);
         accCon.tableOperations().create(tablename2);
-        
+
         try {
             ais1 = new AccumuloIndexSet(queryString1, conn, accCon, tablename1);
             ais2 = new AccumuloIndexSet(queryString2, conn, accCon, tablename2);
-        } catch (MalformedQueryException e) {
-            e.printStackTrace();
-        } catch (SailException e) {
-            e.printStackTrace();
-        } catch (QueryEvaluationException e) {
-            e.printStackTrace();
-        } catch (MutationsRejectedException e) {
-            e.printStackTrace();
-        } catch (TableNotFoundException e) {
-            e.printStackTrace();
+        } catch (MalformedQueryException | SailException | QueryEvaluationException | MutationsRejectedException | TableNotFoundException e) {
+            log.error("Error creating Accumulo Index", e);
         }
-        
     }
-    
+
 
     private static class CountingResultHandler implements TupleQueryResultHandler {
         private int count = 0;
@@ -668,14 +773,10 @@ public class RyaDirectExample {
 
         @Override
         public void handleBoolean(boolean arg0) throws QueryResultHandlerException {
-          // TODO Auto-generated method stub
-          
         }
 
         @Override
         public void handleLinks(List<String> arg0) throws QueryResultHandlerException {
-          // TODO Auto-generated method stub
-          
         }
     }
 }
