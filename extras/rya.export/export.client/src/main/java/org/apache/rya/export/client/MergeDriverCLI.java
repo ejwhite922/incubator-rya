@@ -26,7 +26,6 @@ import java.text.ParseException;
 import java.util.Date;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
@@ -47,8 +46,6 @@ import org.apache.rya.export.api.conf.MergeConfiguration.Builder;
 import org.apache.rya.export.api.conf.MergeConfigurationCLI;
 import org.apache.rya.export.api.conf.MergeConfigurationException;
 import org.apache.rya.export.client.gui.DateTimePickerDialog;
-
-import mvm.rya.indexing.accumulo.ConfigUtils;
 
 /**
  * Drives the MergeTool.
@@ -86,36 +83,6 @@ public class MergeDriverCLI {
             LOG.error("Configuration failed.", e);
         }
 
-
-        final Configuration parentConfig = new Configuration();
-        parentConfig.set(ConfigUtils.CLOUDBASE_INSTANCE, configuration.getParentRyaInstanceName());
-        parentConfig.set(ConfigUtils.CLOUDBASE_USER, configuration.getParentUsername());
-        parentConfig.set(ConfigUtils.CLOUDBASE_PASSWORD, configuration.getParentPassword());
-        parentConfig.set(ConfigUtils.CLOUDBASE_TBL_PREFIX, configuration.getParentTablePrefix());
-        parentConfig.set(AccumuloExportConstants.PARENT_TOMCAT_URL_PROP, configuration.getParentTomcatUrl());
-
-        if (hasAccumuloDatastore) {
-            parentConfig.setBoolean(ConfigUtils.USE_MOCK_INSTANCE, ((AccumuloMergeConfiguration)configuration).getParentInstanceType().isMock());
-            parentConfig.set(AccumuloExportConstants.ACCUMULO_INSTANCE_TYPE_PROP, ((AccumuloMergeConfiguration)configuration).getParentInstanceType().toString());
-            parentConfig.set(ConfigUtils.CLOUDBASE_ZOOKEEPERS, ((AccumuloMergeConfiguration)configuration).getParentZookeepers());
-            parentConfig.set(ConfigUtils.CLOUDBASE_AUTHS, ((AccumuloMergeConfiguration)configuration).getParentAuths());
-        }
-
-        final Configuration childConfig = new Configuration();
-        childConfig.set(ConfigUtils.CLOUDBASE_INSTANCE, configuration.getChildRyaInstanceName());
-        childConfig.set(ConfigUtils.CLOUDBASE_USER, configuration.getChildUsername());
-        childConfig.set(ConfigUtils.CLOUDBASE_PASSWORD, configuration.getChildPassword());
-        childConfig.set(ConfigUtils.CLOUDBASE_TBL_PREFIX, configuration.getChildTablePrefix());
-        childConfig.set(AccumuloExportConstants.CHILD_TOMCAT_URL_PROP, configuration.getChildTomcatUrl());
-
-        if (hasAccumuloDatastore) {
-            childConfig.setBoolean(ConfigUtils.USE_MOCK_INSTANCE, ((AccumuloMergeConfiguration)configuration).getChildInstanceType().isMock());
-            childConfig.set(AccumuloExportConstants.ACCUMULO_INSTANCE_TYPE_PROP, ((AccumuloMergeConfiguration)configuration).getChildInstanceType().toString());
-            childConfig.set(ConfigUtils.CLOUDBASE_ZOOKEEPERS, ((AccumuloMergeConfiguration)configuration).getChildZookeepers());
-            childConfig.set(ConfigUtils.CLOUDBASE_AUTHS, ((AccumuloMergeConfiguration)configuration).getChildAuths());
-        }
-
-
         String startTime = configuration.getToolStartTime();
 
         // Display start time dialog if requested
@@ -138,19 +105,19 @@ public class MergeDriverCLI {
         }
 
         final boolean useTimeSync = configuration.getUseNtpServer();
+        Long childTimeOffset = null;
         if (useTimeSync) {
             final String tomcatUrl = configuration.getChildTomcatUrl();
             final String ntpServerHost = configuration.getNtpServerHost();
-            Long timeOffset = null;
             try {
                 LOG.info("Comparing child machine's time to NTP server time...");
-                timeOffset = TimeUtils.getNtpServerAndMachineTimeDifference(ntpServerHost, tomcatUrl);
+                childTimeOffset = TimeUtils.getNtpServerAndMachineTimeDifference(ntpServerHost, tomcatUrl);
             } catch (IOException | java.text.ParseException e) {
                 LOG.error("Unable to get time difference between machine and NTP server.", e);
             }
-            if (timeOffset != null) {
-                parentConfig.set(AccumuloExportConstants.CHILD_TIME_OFFSET_PROP, "" + timeOffset);
-            }
+//            if (childTimeOffset != null) {
+//                parentConfig.set(AccumuloExportConstants.CHILD_TIME_OFFSET_PROP, "" + childTimeOffset);
+//            }
         }
 
         if(configuration.getParentDBType() == ACCUMULO && configuration.getChildDBType() == ACCUMULO) {
@@ -158,15 +125,15 @@ public class MergeDriverCLI {
             AccumuloRyaStatementStore parentAccumuloRyaStatementStore = null;
             AccumuloRyaStatementStore childAccumuloRyaStatementStore = null;
             try {
-                parentAccumuloRyaStatementStore = new AccumuloRyaStatementStore(parentConfig);
-                childAccumuloRyaStatementStore = new AccumuloRyaStatementStore(childConfig);
+                parentAccumuloRyaStatementStore = new AccumuloRyaStatementStore((AccumuloMergeConfiguration)configuration, true);
+                childAccumuloRyaStatementStore = new AccumuloRyaStatementStore((AccumuloMergeConfiguration)configuration, false);
             } catch (final MergerException e) {
                 LOG.error("Failed to create statement stores", e);
             }
 
             final AccumuloParentMetadataRepository accumuloParentMetadataRepository = new AccumuloParentMetadataRepository(parentAccumuloRyaStatementStore.getRyaDAO());
 
-            final AccumuloMerger accumuloMerger = new AccumuloMerger(parentAccumuloRyaStatementStore, childAccumuloRyaStatementStore, accumuloParentMetadataRepository);
+            final AccumuloMerger accumuloMerger = new AccumuloMerger((AccumuloMergeConfiguration)configuration, parentAccumuloRyaStatementStore, childAccumuloRyaStatementStore, accumuloParentMetadataRepository);
             accumuloMerger.runJob();
         } else {
 
@@ -180,8 +147,6 @@ public class MergeDriverCLI {
                 LOG.error("Uncaught exception in " + thread.getName(), throwable);
             }
         });
-
-        //final int returnCode = setupAndRun(args);
 
         LOG.info("Finished running Merge Tool");
         System.exit(1);
