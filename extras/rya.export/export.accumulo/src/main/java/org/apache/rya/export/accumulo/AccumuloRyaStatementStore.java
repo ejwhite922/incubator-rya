@@ -21,13 +21,18 @@ package org.apache.rya.export.accumulo;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.accumulo.core.client.AccumuloException;
+import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.IteratorSetting;
 import org.apache.accumulo.core.client.Scanner;
+import org.apache.accumulo.core.client.TableNotFoundException;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Value;
 import org.apache.log4j.Logger;
@@ -49,6 +54,7 @@ import info.aduna.iteration.CloseableIteration;
 import mvm.rya.accumulo.AccumuloRyaDAO;
 import mvm.rya.api.RdfCloudTripleStoreConstants;
 import mvm.rya.api.domain.RyaStatement;
+import mvm.rya.api.layout.TableLayoutStrategy;
 import mvm.rya.api.persist.RyaDAOException;
 import mvm.rya.api.resolver.RyaTripleContext;
 import mvm.rya.api.resolver.triple.TripleRowResolverException;
@@ -184,6 +190,8 @@ public class AccumuloRyaStatementStore implements RyaStatementStore {
             if (iter.hasNext()) {
                 resultRyaStatement = iter.next();
             }
+        } catch (final Exception e) {
+            throw new RyaDAOException(e);
         } finally {
             if (iter != null) {
                 iter.close();
@@ -216,5 +224,38 @@ public class AccumuloRyaStatementStore implements RyaStatementStore {
     public void addIterator(final IteratorSetting iteratorSetting) {
         checkNotNull(iteratorSetting);
         iteratorSettings.add(iteratorSetting);
+    }
+
+    /**
+     * Performs a major compaction on the SPO, OSP, and PO tables waiting for
+     * them to finish.
+     * @throws MergerException
+     */
+    public void compact() throws MergerException {
+        final TableLayoutStrategy tableLayoutStrategy = accumuloRyaDao.getConf().getTableLayoutStrategy();
+        final List<String> tables = Arrays.asList(
+                tableLayoutStrategy.getSpo(),
+                tableLayoutStrategy.getOsp(),
+                tableLayoutStrategy.getPo()
+            );
+        compact(tables, true);
+    }
+
+    /**
+     * Performs a major compaction on the specified tables.
+     * @param tables the {@link List} of tables to compact. (not {@code null})
+     * @param wait {@code true} to wait for compaction to finish. {@code false}
+     * otherwise.
+     * @throws MergerException
+     */
+    public void compact(final List<String> tables, final boolean wait) throws MergerException {
+        checkNotNull(tables);
+        try {
+            for (final String table : tables) {
+                accumuloRyaDao.getConnector().tableOperations().compact(table, null, null, true, true);
+            }
+        } catch (final AccumuloSecurityException | TableNotFoundException | AccumuloException e) {
+            throw new MergerException("Unable to perform major compaction on tables.", e);
+        }
     }
 }

@@ -19,6 +19,7 @@
 package org.apache.rya.export.accumulo;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -36,6 +37,7 @@ import org.apache.rya.export.accumulo.util.AccumuloInstanceDriver;
 import org.apache.rya.export.api.MergerException;
 import org.apache.rya.export.api.conf.AccumuloMergeConfiguration;
 import org.apache.rya.export.api.store.AddStatementException;
+import org.apache.rya.export.api.store.ContainsStatementException;
 import org.apache.rya.export.api.store.FetchStatementException;
 import org.apache.rya.export.api.store.RemoveStatementException;
 import org.apache.rya.export.api.store.UpdateStatementException;
@@ -147,6 +149,63 @@ public class AccumuloRyaStatementStoreTest {
     }
 
     @Test
+    public void testAddDeleteReAddStatement() throws MergerException {
+        final AccumuloRyaStatementStore accumuloRyaStatementStore = createAccumuloRyaStatementStore();
+
+        // Add statements
+        for (final RyaStatement ryaStatement : RYA_STATEMENTS) {
+            accumuloRyaStatementStore.addStatement(ryaStatement);
+        }
+
+        // Remove statements
+        for (final RyaStatement ryaStatement : RYA_STATEMENTS) {
+            accumuloRyaStatementStore.removeStatement(ryaStatement);
+        }
+        assertTrue(isStatementStoreEmpty(accumuloRyaStatementStore));
+
+        accumuloRyaStatementStore.compact();
+
+//        // Scan for statements
+//        try {
+//            final Scanner scanner = AccumuloRyaUtils.getScanner("test_spo", accumuloRyaStatementStore.getRyaDAO().getConf());
+//            final Iterator<Entry<Key, Value>> iter = scanner.iterator();
+//            while (iter.hasNext()) {
+//                final Entry<Key, Value> entry = iter.next();
+//                log.info(entry.getKey());
+//            }
+//        } catch (final IOException e) {
+//            log.error(e, e);
+//        }
+
+        // Re-add statements
+        for (final RyaStatement ryaStatement : RYA_STATEMENTS) {
+//            // Query for statement before re-adding
+//            try {
+//                final CloseableIteration<RyaStatement, RyaDAOException> iter = accumuloRyaStatementStore.getRyaDAO().getQueryEngine().query(ryaStatement, accumuloRyaStatementStore.getRyaDAO().getConf());
+//                while (iter.hasNext()) {
+//                    final RyaStatement s = iter.next();
+//                    log.info(s);
+//                }
+//                iter.close();
+//            } catch (final RyaDAOException e) {
+//                log.error("Error while querying for statement", e);
+//            }
+
+            // Update timestamp to newer time since it's being re-added
+            ryaStatement.setTimestamp(ryaStatement.getTimestamp() + 1);
+            accumuloRyaStatementStore.addStatement(ryaStatement);
+        }
+
+        // Check appropriate number added
+        assertEquals(RYA_STATEMENTS.size(), getAccumuloRyaStatementStoreSize(accumuloRyaStatementStore));
+
+        // Confirm statements are in statement store
+        for (final RyaStatement ryaStatement : RYA_STATEMENTS) {
+            assertTrue(accumuloRyaStatementStore.containsStatement(ryaStatement));
+        }
+    }
+
+    @Test
     public void testRemoveStatement() throws MergerException {
         final AccumuloRyaStatementStore accumuloRyaStatementStore = createAccumuloRyaStatementStore();
 
@@ -159,8 +218,10 @@ public class AccumuloRyaStatementStoreTest {
 
         // Add all then remove all
         for (final RyaStatement ryaStatement : RYA_STATEMENTS) {
+            ryaStatement.setTimestamp(ryaStatement.getTimestamp() + 1);
             accumuloRyaStatementStore.addStatement(ryaStatement);
         }
+        assertEquals(RYA_STATEMENTS.size(), getAccumuloRyaStatementStoreSize(accumuloRyaStatementStore));
         for (final RyaStatement ryaStatement : RYA_STATEMENTS) {
             accumuloRyaStatementStore.removeStatement(ryaStatement);
         }
@@ -168,8 +229,10 @@ public class AccumuloRyaStatementStoreTest {
 
         // Add all then remove all in reverse order
         for (final RyaStatement ryaStatement : RYA_STATEMENTS) {
+            ryaStatement.setTimestamp(ryaStatement.getTimestamp() + 1);
             accumuloRyaStatementStore.addStatement(ryaStatement);
         }
+        assertEquals(RYA_STATEMENTS.size(), getAccumuloRyaStatementStoreSize(accumuloRyaStatementStore));
         final ImmutableList<RyaStatement> reverseList = RYA_STATEMENTS.reverse();
         for (final RyaStatement ryaStatement : reverseList) {
             accumuloRyaStatementStore.removeStatement(ryaStatement);
@@ -179,6 +242,7 @@ public class AccumuloRyaStatementStoreTest {
         // Add all then remove one from middle follow by another before and
         // after the first removed one
         for (final RyaStatement ryaStatement : RYA_STATEMENTS) {
+            ryaStatement.setTimestamp(ryaStatement.getTimestamp() + 1);
             accumuloRyaStatementStore.addStatement(ryaStatement);
         }
 
@@ -315,7 +379,45 @@ public class AccumuloRyaStatementStoreTest {
         assertEquals(RYA_STATEMENTS.size() + 1, totalCount);
     }
 
+    @Test
+    public void testContainsStatement() throws MergerException {
+        final AccumuloRyaStatementStore accumuloRyaStatementStore = createAccumuloRyaStatementStore();
 
+        // Add statements
+        for (final RyaStatement ryaStatement : RYA_STATEMENTS) {
+            accumuloRyaStatementStore.addStatement(ryaStatement);
+        }
+
+        // Confirm added statements are found
+        for (final RyaStatement ryaStatement : RYA_STATEMENTS) {
+            assertTrue(accumuloRyaStatementStore.containsStatement(ryaStatement));
+        }
+
+        // Confirm non-existent statement isn't found
+        final RyaStatement notFoundStatement = TestUtils.createRyaStatement("Statement", "not found", "here", DATE);
+        assertFalse("Statement that should not exist was found.", accumuloRyaStatementStore.containsStatement(notFoundStatement));
+
+        // Remove statements
+        for (final RyaStatement ryaStatement : RYA_STATEMENTS) {
+            accumuloRyaStatementStore.removeStatement(ryaStatement);
+        }
+
+        // Confirm removed statements are no longer found
+        for (final RyaStatement ryaStatement : RYA_STATEMENTS) {
+            assertFalse("Removed statement still found.", accumuloRyaStatementStore.containsStatement(ryaStatement));
+        }
+    }
+
+    @Test (expected = ContainsStatementException.class)
+    public void testContainsStatement_ContainsNull() throws MergerException {
+        final AccumuloRyaStatementStore accumuloRyaStatementStore = createAccumuloRyaStatementStore();
+
+        // Add statements
+        for (final RyaStatement ryaStatement : RYA_STATEMENTS) {
+            accumuloRyaStatementStore.addStatement(ryaStatement);
+            accumuloRyaStatementStore.containsStatement(null);
+        }
+    }
 
     @After
     public void shutdownMiniResources() {
@@ -380,5 +482,15 @@ public class AccumuloRyaStatementStoreTest {
         final String zooKeepers = accumuloMergeConfiguration.getParentZookeepers();
 
         return new AccumuloRyaStatementStore(instance, username, password, instanceType, tablePrefix, auths, zooKeepers);
+    }
+
+    private static int getAccumuloRyaStatementStoreSize(final AccumuloRyaStatementStore accumuloRyaStatementStore) throws FetchStatementException {
+        int size = 0;
+        final Iterator<RyaStatement> iter = accumuloRyaStatementStore.fetchStatements();
+        while (iter.hasNext()) {
+            iter.next();
+            size++;
+        }
+        return size;
     }
 }
