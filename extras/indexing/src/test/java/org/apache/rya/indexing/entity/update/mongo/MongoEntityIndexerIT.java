@@ -23,6 +23,9 @@ import static org.junit.Assert.assertEquals;
 import java.util.Set;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.rya.api.domain.RyaStatement;
+import org.apache.rya.api.domain.RyaType;
+import org.apache.rya.api.domain.RyaURI;
 import org.apache.rya.indexing.entity.model.Entity;
 import org.apache.rya.indexing.entity.model.Property;
 import org.apache.rya.indexing.entity.model.Type;
@@ -32,18 +35,13 @@ import org.apache.rya.indexing.entity.storage.mongo.MongoEntityStorage;
 import org.apache.rya.indexing.entity.storage.mongo.MongoITBase;
 import org.apache.rya.indexing.entity.storage.mongo.MongoTypeStorage;
 import org.apache.rya.indexing.entity.update.EntityIndexer;
-import org.apache.rya.indexing.entity.update.mongo.MongoEntityIndexer;
+import org.apache.rya.mongodb.MongoDBRdfConfiguration;
 import org.junit.Test;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.XMLSchema;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-
-import mvm.rya.api.domain.RyaStatement;
-import mvm.rya.api.domain.RyaType;
-import mvm.rya.api.domain.RyaURI;
-import mvm.rya.mongodb.MongoDBRdfConfiguration;
 
 /**
  * Integration tests the methods of {@link MongoEntityIndexer}.
@@ -277,7 +275,6 @@ public class MongoEntityIndexerIT extends MongoITBase {
         final EntityIndexer indexer = new MongoEntityIndexer();
 
         final MongoDBRdfConfiguration conf = new MongoDBRdfConfiguration( new Configuration() );
-        conf.setUseTestMongo(true);
         conf.setMongoDBName(RYA_INSTANCE_NAME);
 
         indexer.setConf(conf);

@@ -16,30 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.rya.indexing.pcj.matching;
+package org.apache.rya.indexing.entity;
 
+import org.apache.rya.indexing.entity.query.EntityQueryNode;
 import org.apache.rya.indexing.external.matching.AbstractExternalSetMatcherFactory;
 import org.apache.rya.indexing.external.matching.ExternalSetMatcher;
 import org.apache.rya.indexing.external.matching.JoinSegment;
 import org.apache.rya.indexing.external.matching.JoinSegmentMatcher;
 import org.apache.rya.indexing.external.matching.OptionalJoinSegment;
 import org.apache.rya.indexing.external.matching.OptionalJoinSegmentMatcher;
-import org.apache.rya.indexing.external.tupleSet.ExternalTupleSet;
 
 /**
- * Factory used to build {@link ExternalSetMatcher}s for the {@link PCJOptimizer}.
+ * Factory used to build {@link EntityQueryNodeMatcher}s for the {@link EntityIndexOptimizer}.
  *
  */
-public class PCJExternalSetMatcherFactory extends AbstractExternalSetMatcherFactory<ExternalTupleSet> {
+public class EntityExternalSetMatcherFactory extends AbstractExternalSetMatcherFactory<EntityQueryNode> {
 
     @Override
-    protected ExternalSetMatcher<ExternalTupleSet> getJoinSegmentMatcher(final JoinSegment<ExternalTupleSet> segment) {
-        return new JoinSegmentMatcher<ExternalTupleSet>(segment, new PCJToSegmentConverter());
+    protected ExternalSetMatcher<EntityQueryNode> getJoinSegmentMatcher(final JoinSegment<EntityQueryNode> segment) {
+        return new JoinSegmentMatcher<EntityQueryNode>(segment, new EntityToSegmentConverter());
     }
 
     @Override
-    protected ExternalSetMatcher<ExternalTupleSet> getOptionalJoinSegmentMatcher(final OptionalJoinSegment<ExternalTupleSet> segment) {
-        return new OptionalJoinSegmentMatcher<ExternalTupleSet>(segment, new PCJToSegmentConverter());
+    protected ExternalSetMatcher<EntityQueryNode> getOptionalJoinSegmentMatcher(final OptionalJoinSegment<EntityQueryNode> segment) {
+        return new OptionalJoinSegmentMatcher<EntityQueryNode>(segment, new EntityToSegmentConverter());
     }
-
 }

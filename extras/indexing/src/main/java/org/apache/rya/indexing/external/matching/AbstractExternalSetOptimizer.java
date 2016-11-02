@@ -1,3 +1,21 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.apache.rya.indexing.external.matching;
 
 import java.util.HashSet;
@@ -23,17 +41,17 @@ import com.google.common.base.Optional;
 
 /**
  * Abstract base class meant to be extended by any QueryOptimizer that matches ExternalSets
- * to QueryModelNodes within the parsed query plan. 
+ * to QueryModelNodes within the parsed query plan.
  *
  * @param <T> - ExternalSet parameter
  */
 public abstract class AbstractExternalSetOptimizer<T extends ExternalSet> implements QueryOptimizer {
 
     protected boolean useOptimal = false;
-    
+
     @Override
-    public void optimize(TupleExpr tupleExpr, Dataset dataset, BindingSet bindings) {
-        QuerySegmentMatchVisitor visitor = new QuerySegmentMatchVisitor();
+    public void optimize(final TupleExpr tupleExpr, final Dataset dataset, final BindingSet bindings) {
+        final QuerySegmentMatchVisitor visitor = new QuerySegmentMatchVisitor();
         tupleExpr.visit(visitor);
     }
 
@@ -54,22 +72,27 @@ public abstract class AbstractExternalSetOptimizer<T extends ExternalSet> implem
         private final QuerySegmentFactory<T> factory = new QuerySegmentFactory<T>();
 
         @Override
-        public void meetNode(QueryModelNode node) {
+        public void meetNode(final QueryModelNode node) {
 
             if (checkNode(node)) {
-                QuerySegment<T> segment = factory.getQuerySegment(node);
-                ExternalSetProvider<T> provider = getProvider(segment);
-                ExternalSetMatcher<T> matcher = getMatcher(segment);
+                //have a set of nodes
+                final QuerySegment<T> segment = factory.getQuerySegment(node);
+
+                //create a set of T that are in the set of nodes
+                final ExternalSetProvider<T> provider = getProvider(segment);
+
+                //match the provided T nodes to the existing nodes in the segment.
+                final ExternalSetMatcher<T> matcher = getMatcher(segment);
                 QuerySegment<T> tempSeg = null;
                 if(useOptimal) {
                     tempSeg = matcher.match(provider.getExternalSetCombos(segment), getNodeListRater(segment));
                 } else {
                     tempSeg = matcher.match(provider.getExternalSets(segment));
                 }
-                
-                TupleExprAndNodes tups = tempSeg.getQuery();
+
+                final TupleExprAndNodes tups = tempSeg.getQuery();
                 node.replaceWith(tups.getTupleExpr());
-                Set<TupleExpr> unmatched = getUnMatchedArgNodes(tups.getNodes());
+                final Set<TupleExpr> unmatched = getUnMatchedArgNodes(tups.getNodes());
                 PCJOptimizerUtilities.relocateFilters(tups.getFilters());
 
                 for (final TupleExpr tupleExpr : unmatched) {
@@ -81,8 +104,8 @@ public abstract class AbstractExternalSetOptimizer<T extends ExternalSet> implem
         }
     }
 
-    private Set<TupleExpr> getUnMatchedArgNodes(List<QueryModelNode> nodes) {
-        Set<TupleExpr> unmatched = new HashSet<>();
+    private Set<TupleExpr> getUnMatchedArgNodes(final List<QueryModelNode> nodes) {
+        final Set<TupleExpr> unmatched = new HashSet<>();
         for (final QueryModelNode q : nodes) {
             if (q instanceof UnaryTupleOperator
                     || q instanceof BinaryTupleOperator) {
@@ -91,15 +114,15 @@ public abstract class AbstractExternalSetOptimizer<T extends ExternalSet> implem
         }
         return unmatched;
     }
-    
-    
-    private static boolean checkNode(QueryModelNode node) {
+
+
+    private static boolean checkNode(final QueryModelNode node) {
         return (node instanceof Join || node instanceof Filter || node instanceof LeftJoin);
     }
 
     /**
      * Get Matcher used to match ExternalSets to query
-     * 
+     *
      * @param segment
      * @return
      */
@@ -107,16 +130,16 @@ public abstract class AbstractExternalSetOptimizer<T extends ExternalSet> implem
 
     /**
      * Get ExternalSetProvider for source of ExternalSets to match to query
-     * 
+     *
      * @param segment
      * @return
      */
     protected abstract ExternalSetProvider<T> getProvider(QuerySegment<T> segment);
-    
+
     /**
      * Get QueryNodeListRater to find optimal QueryNodeList after matching ExternalSets
-     * 
-     * @return 
+     *
+     * @return
      */
     protected abstract Optional<QueryNodeListRater> getNodeListRater(QuerySegment<T> segment);
 

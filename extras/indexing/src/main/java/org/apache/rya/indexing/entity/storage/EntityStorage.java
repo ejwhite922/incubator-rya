@@ -21,20 +21,22 @@ package org.apache.rya.indexing.entity.storage;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.annotation.ParametersAreNonnullByDefault;
-
+import org.apache.rya.api.domain.RyaURI;
 import org.apache.rya.indexing.entity.EntityIndexException;
 import org.apache.rya.indexing.entity.model.Entity;
 import org.apache.rya.indexing.entity.model.Property;
 import org.apache.rya.indexing.entity.model.Type;
 import org.apache.rya.indexing.entity.model.TypedEntity;
+import org.apache.rya.indexing.entity.storage.mongo.ConvertingCursor;
+import org.calrissian.mango.collect.CloseableIterator;
 
-import mvm.rya.api.domain.RyaURI;
+import edu.umd.cs.findbugs.annotations.DefaultAnnotation;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Stores and provides access to {@link Entity}s.
  */
-@ParametersAreNonnullByDefault
+@DefaultAnnotation(NonNull.class)
 public interface EntityStorage {
 
     /**
@@ -74,7 +76,7 @@ public interface EntityStorage {
      * @return A {@link CloseableIterator} over the {@link TypedEntity}s that match the search parameters.
      * @throws EntityStorageException A problem occurred while searching the storage.
      */
-    public CloseableIterator<TypedEntity> search(Type type, Set<Property> properties) throws EntityStorageException;
+    public ConvertingCursor<TypedEntity> search(Type type, Set<Property> properties) throws EntityStorageException;
 
     /**
      * Deletes an {@link Entity} from the storage.
@@ -99,7 +101,7 @@ public interface EntityStorage {
          * @param   message   the detail message. The detail message is saved for
          *          later retrieval by the {@link #getMessage()} method.
          */
-        public EntityStorageException(String message) {
+        public EntityStorageException(final String message) {
             super(message);
         }
 
@@ -116,7 +118,7 @@ public interface EntityStorage {
          *         permitted, and indicates that the cause is nonexistent or
          *         unknown.)
          */
-        public EntityStorageException(String message, Throwable cause) {
+        public EntityStorageException(final String message, final Throwable cause) {
             super(message, cause);
         }
     }
@@ -127,11 +129,11 @@ public interface EntityStorage {
     public static class EntityAlreadyExistsException extends EntityStorageException {
         private static final long serialVersionUID = 1L;
 
-        public EntityAlreadyExistsException(String message) {
+        public EntityAlreadyExistsException(final String message) {
             super(message);
         }
 
-        public EntityAlreadyExistsException(String message, Throwable cause) {
+        public EntityAlreadyExistsException(final String message, final Throwable cause) {
             super(message, cause);
         }
     }
@@ -143,11 +145,11 @@ public interface EntityStorage {
     public static class StaleUpdateException extends EntityStorageException {
         private static final long serialVersionUID = 1L;
 
-        public StaleUpdateException(String message) {
+        public StaleUpdateException(final String message) {
             super(message);
         }
 
-        public StaleUpdateException(String message, Throwable cause) {
+        public StaleUpdateException(final String message, final Throwable cause) {
             super(message, cause);
         }
     }

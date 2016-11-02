@@ -18,8 +18,6 @@
  */
 package org.apache.rya.indexing.entity.update.mongo;
 
-import javax.annotation.ParametersAreNonnullByDefault;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.rya.indexing.entity.storage.EntityStorage;
 import org.apache.rya.indexing.entity.storage.TypeStorage;
@@ -27,29 +25,38 @@ import org.apache.rya.indexing.entity.storage.mongo.MongoEntityStorage;
 import org.apache.rya.indexing.entity.storage.mongo.MongoTypeStorage;
 import org.apache.rya.indexing.entity.update.BaseEntityIndexer;
 import org.apache.rya.indexing.entity.update.EntityIndexer;
+import org.apache.rya.mongodb.MongoConnectorFactory;
+import org.apache.rya.mongodb.MongoDBRdfConfiguration;
 
 import com.mongodb.MongoClient;
 
-import mvm.rya.mongodb.MongoConnectorFactory;
-import mvm.rya.mongodb.MongoDBRdfConfiguration;
+import edu.umd.cs.findbugs.annotations.DefaultAnnotation;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * A Mongo DB implementation of {@link EntityIndexer}.
  */
-@ParametersAreNonnullByDefault
+@DefaultAnnotation(NonNull.class)
 public class MongoEntityIndexer extends BaseEntityIndexer {
-
     @Override
-    public EntityStorage getEntityStorage(Configuration conf) {
-        final MongoClient mongoClient = MongoConnectorFactory.getMongoClient(conf);
+    public EntityStorage getEntityStorage(final Configuration conf) {
+        final MongoDBRdfConfiguration mongoConf = (MongoDBRdfConfiguration) conf;
+        MongoClient client = mongoConf.getMongoClient();
+        if (client == null) {
+            client = MongoConnectorFactory.getMongoClient(conf);
+        }
         final String ryaInstanceName = new MongoDBRdfConfiguration(conf).getMongoDBName();
-        return new MongoEntityStorage(mongoClient, ryaInstanceName);
+        return new MongoEntityStorage(client, ryaInstanceName);
     }
 
     @Override
-    public TypeStorage getTypeStorage(Configuration conf) {
-        final MongoClient mongoClient = MongoConnectorFactory.getMongoClient(conf);
+    public TypeStorage getTypeStorage(final Configuration conf) {
+        final MongoDBRdfConfiguration mongoConf = (MongoDBRdfConfiguration) conf;
+        MongoClient client = mongoConf.getMongoClient();
+        if (client == null) {
+            client = MongoConnectorFactory.getMongoClient(conf);
+        }
         final String ryaInstanceName = new MongoDBRdfConfiguration(conf).getMongoDBName();
-        return new MongoTypeStorage(mongoClient, ryaInstanceName);
+        return new MongoTypeStorage(client, ryaInstanceName);
     }
 }

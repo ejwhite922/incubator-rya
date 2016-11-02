@@ -22,8 +22,8 @@ import static org.mockito.Mockito.mock;
 
 import java.util.List;
 
+import org.apache.rya.api.domain.RyaURI;
 import org.apache.rya.indexing.entity.model.Type;
-import org.apache.rya.indexing.entity.query.EntityQueryNode;
 import org.apache.rya.indexing.entity.storage.EntityStorage;
 import org.junit.Test;
 import org.openrdf.model.vocabulary.RDF;
@@ -33,8 +33,6 @@ import org.openrdf.query.algebra.helpers.StatementPatternCollector;
 import org.openrdf.query.parser.sparql.SPARQLParser;
 
 import com.google.common.collect.ImmutableSet;
-
-import mvm.rya.api.domain.RyaURI;
 
 /**
  * Unit tests the methods of {@link EntityQueryNode}.
@@ -187,7 +185,7 @@ public class EntityQueryNodeTest {
      * @return
      * @throws MalformedQueryException
      */
-    private static List<StatementPattern> getSPs(String sparql) throws MalformedQueryException {
+    private static List<StatementPattern> getSPs(final String sparql) throws MalformedQueryException {
         final StatementPatternCollector spCollector = new StatementPatternCollector();
         new SPARQLParser().parseQuery(sparql, null).getTupleExpr().visit(spCollector);
         return spCollector.getStatementPatterns();

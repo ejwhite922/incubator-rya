@@ -20,31 +20,47 @@ package org.apache.rya.indexing.entity.query;
 
 import static java.util.Objects.requireNonNull;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Consumer;
 
-import javax.annotation.ParametersAreNonnullByDefault;
-
+import org.apache.rya.api.domain.RyaType;
+import org.apache.rya.api.domain.RyaURI;
+import org.apache.rya.indexing.entity.model.Entity;
+import org.apache.rya.indexing.entity.model.Property;
 import org.apache.rya.indexing.entity.model.Type;
 import org.apache.rya.indexing.entity.storage.EntityStorage;
+import org.apache.rya.indexing.entity.storage.EntityStorage.EntityStorageException;
+import org.apache.rya.rdftriplestore.evaluation.ExternalBatchingIterator;
+import org.openrdf.model.Value;
+import org.openrdf.model.impl.ValueFactoryImpl;
 import org.openrdf.model.vocabulary.RDF;
+import org.openrdf.query.Binding;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.QueryEvaluationException;
 import org.openrdf.query.algebra.StatementPattern;
 import org.openrdf.query.algebra.Var;
 import org.openrdf.query.algebra.evaluation.impl.ExternalSet;
+import org.openrdf.query.algebra.evaluation.iterator.CollectionIteration;
+import org.openrdf.query.impl.MapBindingSet;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap.Builder;
 
+import edu.umd.cs.findbugs.annotations.DefaultAnnotation;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import info.aduna.iteration.CloseableIteration;
-import mvm.rya.api.domain.RyaURI;
-import mvm.rya.rdftriplestore.evaluation.ExternalBatchingIterator;
+import info.aduna.iteration.EmptyIteration;
 
 /**
  * TODO impl, test, doc
  */
-@ParametersAreNonnullByDefault
+@DefaultAnnotation(NonNull.class)
 public class EntityQueryNode extends ExternalSet implements ExternalBatchingIterator {
 
     /**
@@ -62,11 +78,14 @@ public class EntityQueryNode extends ExternalSet implements ExternalBatchingIter
     private final Optional<String> subjectConstant;
     private final Optional<String> subjectVar;
 
+    //since and EntityQueryNode exists in a single segment, all binding names are garunteed to be assured.
+    private final Set<String> bindingNames;
+
     // Information about the objects of the patterns.
 
     // XXX what does this map? property name -> binding variable?
     // for any property of the entity that has a variable, have to fill it in?
-    private final ImmutableMap<RyaURI, String> objectVariables;
+    private final ImmutableMap<RyaURI, Var> objectVariables;
 
 
     /**
@@ -82,6 +101,8 @@ public class EntityQueryNode extends ExternalSet implements ExternalBatchingIter
         this.type = requireNonNull(type);
         this.patterns = requireNonNull(patterns);
         this.entities = requireNonNull(entities);
+
+        bindingNames = new HashSet<>();
 
         // Subject based preconditions.
         verifySameSubjects(patterns);
@@ -105,8 +126,24 @@ public class EntityQueryNode extends ExternalSet implements ExternalBatchingIter
         // TODO Also, map each variable that is in an Object spot each variable can be mapped to a property name as well
         // Processing note:
         // Any constant that appears in the Object portion of the SP will be used to make sure they match.
+        final Builder<RyaURI, Var> builder = ImmutableMap.<RyaURI, Var>builder();
+        for(final StatementPattern sp : patterns) {
+            final Var object = sp.getObjectVar();
+            final Var pred = sp.getPredicateVar();
+            bindingNames.addAll(sp.getBindingNames());
+            builder.put(new RyaURI(pred.getValue().stringValue()), object);
+        }
+        objectVariables = builder.build();
+    }
 
-        objectVariables = null;
+    @Override
+    public Set<String> getBindingNames() {
+        return bindingNames;
+    }
+
+    @Override
+    public Set<String> getAssuredBindingNames() {
+        return bindingNames;
     }
 
     /**
@@ -115,7 +152,7 @@ public class EntityQueryNode extends ExternalSet implements ExternalBatchingIter
      * @param patterns - The patterns to check.
      * @throws IllegalStateException If all of the Subjects are not the same.
      */
-    private static void verifySameSubjects(Collection<StatementPattern> patterns) throws IllegalStateException {
+    private static void verifySameSubjects(final Collection<StatementPattern> patterns) throws IllegalStateException {
         requireNonNull(patterns);
 
         final Iterator<StatementPattern> it = patterns.iterator();
@@ -136,7 +173,7 @@ public class EntityQueryNode extends ExternalSet implements ExternalBatchingIter
      * @param patterns - The patterns to check. (not null)
      * @throws IllegalStateException A pattern has a variable predicate.
      */
-    private static void verifyAllPredicatesAreConstants(Collection<StatementPattern> patterns) throws IllegalStateException {
+    private static void verifyAllPredicatesAreConstants(final Collection<StatementPattern> patterns) throws IllegalStateException {
         requireNonNull(patterns);
 
         for(final StatementPattern pattern : patterns) {
@@ -153,7 +190,7 @@ public class EntityQueryNode extends ExternalSet implements ExternalBatchingIter
      * @param patterns - The patterns to check. (not null)
      * @throws IllegalStateException No Type or the wrong Type is specified by the patterns.
      */
-    private static void verifyHasCorrectTypePattern(Type type, Collection<StatementPattern> patterns) throws IllegalStateException {
+    private static void verifyHasCorrectTypePattern(final Type type, final Collection<StatementPattern> patterns) throws IllegalStateException {
         requireNonNull(type);
         requireNonNull(patterns);
 
@@ -186,7 +223,7 @@ public class EntityQueryNode extends ExternalSet implements ExternalBatchingIter
      * @throws IllegalStateException If any of the non-type defining Statement Patterns
      *   contain a predicate that does not match one of the Type's property names.
      */
-    private static void verifyAllPredicatesPartOfType(Type type, Collection<StatementPattern> patterns) throws IllegalStateException {
+    private static void verifyAllPredicatesPartOfType(final Type type, final Collection<StatementPattern> patterns) throws IllegalStateException {
         requireNonNull(type);
         requireNonNull(patterns);
 
@@ -204,35 +241,116 @@ public class EntityQueryNode extends ExternalSet implements ExternalBatchingIter
         }
     }
 
-
-
-
-
-
     @Override
-    public CloseableIteration<BindingSet, QueryEvaluationException> evaluate(Collection<BindingSet> bindingSets) throws QueryEvaluationException {
+    public CloseableIteration<BindingSet, QueryEvaluationException> evaluate(final Collection<BindingSet> bindingSets) throws QueryEvaluationException {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public CloseableIteration<BindingSet, QueryEvaluationException> evaluate(BindingSet bindingSet) throws QueryEvaluationException {
+    public CloseableIteration<BindingSet, QueryEvaluationException> evaluate(final BindingSet bindingSet) throws QueryEvaluationException {
         requireNonNull(bindingSet);
-
         // ... ok, so if the subject needs to be filled in, then we need to see if the subject variable is in the binding set.
         // if it is, fetch that value and then fetch the entity for the subject.
+        final MapBindingSet resultSet = new MapBindingSet();
+        try {
+            final Optional<Entity> optEntity;
+            final String subj;
+            if(subjectIsConstant) {
+                // if it isn't, fetch the entity for the constant?
+                subj = subjectConstant.get();
+                optEntity = entities.get(new RyaURI(subjectConstant.get()));
+            } else {
+                subj = subjectVar.get();
+                if(bindingSet.getBindingNames().contains(subj)) {
+                    final Binding binding = bindingSet.getBinding(subj);
+                    optEntity = entities.get(new RyaURI(binding.getValue().toString()));
+                } else {
+                    // RETURN AN EMPTY ITERATION IF IT CAN NOT FILL IT IN!
+                    return new EmptyIteration<BindingSet, QueryEvaluationException>();
+                }
+            }
 
-        // if it isn't, fetch the entity for the constant?
-
-
-        // RETURN AN EMPTY ITERATION IF IT CAN NOT FILL IT IN!
-
-        // for all variables in the OBJECT portion of the SPs, fill 'em in using the entity that is stored in the index.
-
+            if(optEntity.isPresent()) {
+                // for all variables in the OBJECT portion of the SPs, fill 'em in using the entity that is stored in the index.
+                final Entity entity = optEntity.get();
+                final ImmutableMap<RyaURI, Property> entityProps = entity.getProperties().get(type.getId());
+                //ensure properties match and only add properties that are in the statement patterns to the binding set
+                for(final RyaURI key : objectVariables.keySet()) {
+                    if(entityProps.containsKey(key)) {
+                        //the statement pattern has this property, check to see if the values match(if constant)
+                        final Var object = objectVariables.get(key);
+                        final RyaType entityType = entityProps.get(key).getValue();
+                        final Value entityVal = ValueFactoryImpl.getInstance().createLiteral(entityType.getData(), entityType.getDataType());
+                        if(object.isConstant()) {
+                            final Value objectVal = object.getValue();
+                            if(objectVal.equals(entityVal)) {
+                                //add to binding set
+                                resultSet.addBinding(object.getName(), entityVal);
+                            }
+                        } else {
+                            resultSet.addBinding(object.getName(), entityVal);
+                        }
+                    } else {
+                        //entity doesn't hold to statement patterns
+                    }
+                }
+            } else {
+                return new EmptyIteration<BindingSet, QueryEvaluationException>();
+            }
+        } catch (final EntityStorageException e) {
+            throw new QueryEvaluationException("Failed to evaluate the binding set", e);
+        }
         // x = alice's SSN
         // y = blue  <-- how do i know this is for urn:eye property? FROM THE STATEMENT PATTERN. look for the ?y in the SP, and that has the property name in it.
+        bindingSet.forEach(new Consumer<Binding>() {
+            @Override
+            public void accept(final Binding binding) {
+                resultSet.addBinding(binding);
+            }
+        });
+        final List<BindingSet> list = new ArrayList<>();
+        list.add(resultSet);
+        return new CollectionIteration<>(list);
+    }
 
-        // TODO Auto-generated method stub
-        return null;
+    /**
+     * @return - The {@link StatementPattern}s that make up this {@link EntityQueryNode}
+     */
+    public Collection<StatementPattern> getPatterns() {
+        return patterns;
+    }
+
+    @Override
+    public int hashCode() {
+        int hashcode =
+            (subjectIsConstant ? 1 : 0) +
+            type.hashCode() +
+            subjectVar.hashCode() +
+            subjectConstant.hashCode();
+        for(final StatementPattern sp : getPatterns()) {
+            hashcode += sp.hashCode();
+        }
+        return hashcode;
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        if(other instanceof EntityQueryNode) {
+            return hashCode() == other.hashCode();
+        }
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("Type: " + type.toString());
+        sb.append("Statement Patterns:");
+        sb.append("-------------------");
+        for(final StatementPattern sp : getPatterns()) {
+            sb.append(sp.toString());
+        }
+        return sb.toString();
     }
 }
