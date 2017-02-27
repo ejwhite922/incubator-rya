@@ -97,6 +97,8 @@ under the License.
 
         <guava.version>14.0.1</guava.version> <!-- Newest: 18.0 -->
 
+        <httpcomponents.version>4.5.2</httpcomponents.version> <!-- Newest: 4.5.3 -->
+
         <karaf.version>2.2.11</karaf.version> <!-- Newest: 4.0.3 -->
         <mango.version>1.2.0</mango.version> <!-- Newest: 1.4.0 -->
         <antlr-runtime.version>3.4</antlr-runtime.version> <!-- Newest: 3.5.2 -->
@@ -582,6 +584,12 @@ under the License.
                 <groupId>org.apache.fluo</groupId>
                 <artifactId>fluo-mini</artifactId>
                 <version>${fluo.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpclient</artifactId>
+                <version>${httpcomponents.version}</version>
             </dependency>
 
             <dependency>
