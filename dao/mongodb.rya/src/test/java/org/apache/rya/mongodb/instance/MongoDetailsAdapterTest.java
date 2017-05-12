@@ -150,7 +150,6 @@ public class MongoDetailsAdapterTest {
                 .setPCJIndexDetails(
                         PCJIndexDetails.builder()
                         .setEnabled(true)
-                        .setFluoDetails(new FluoDetails("fluo"))
                         .addPCJDetails(
                                 PCJDetails.builder()
                                 .setId("pcj_0")
