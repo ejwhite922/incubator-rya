@@ -47,9 +47,9 @@ import org.apache.rya.indexing.pcj.fluo.app.query.MetadataCacheSupplier;
 import org.apache.rya.indexing.pcj.storage.accumulo.VariableOrder;
 import org.apache.rya.indexing.pcj.storage.accumulo.VisibilityBindingSet;
 import org.apache.rya.indexing.pcj.storage.accumulo.VisibilityBindingSetSerDe;
-import org.openrdf.query.Binding;
-import org.openrdf.query.BindingSet;
-import org.openrdf.query.impl.MapBindingSet;
+import org.eclipse.rdf4j.query.Binding;
+import org.eclipse.rdf4j.query.BindingSet;
+import org.eclipse.rdf4j.query.impl.MapBindingSet;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
@@ -174,8 +174,8 @@ public class JoinResultUpdater extends AbstractNodeUpdater {
     /**
      * The different sides a new binding set may appear on.
      */
-    public static enum Side {
-        LEFT, RIGHT;
+    public enum Side {
+        LEFT, RIGHT
     }
 
 
