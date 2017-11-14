@@ -70,7 +70,6 @@ under the License.
     </modules>
     <properties>
         <org.eclipse.rdf4j.version>2.2.2</org.eclipse.rdf4j.version> <!-- Newest: 2.2.2 -->
-        <!--Cannot upgrade to openrdf.sesame 2.7.6 until RYA-9 is resolved -->
 
         <accumulo.version>1.6.4</accumulo.version> <!-- Newest: 1.7.0 -->
         <hadoop.version>2.5.0</hadoop.version> <!-- Newest: 2.7.1 -->
@@ -116,7 +115,7 @@ under the License.
         <junit.version>4.12</junit.version> <!-- Newest: 4.12 -->
         <mockito.version>1.10.19</mockito.version> <!-- Newest: 1.10.19 -->
         <mrunit.version>1.1.0</mrunit.version> <!-- Newest: 1.1.0 -->
-        <slf4j.version>1.6.6</slf4j.version> <!-- Newest: 1.7.13 -->
+        <slf4j.version>1.7.25</slf4j.version> <!-- Newest: 1.7.13 -->
         <powermock.version>1.6.1</powermock.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
