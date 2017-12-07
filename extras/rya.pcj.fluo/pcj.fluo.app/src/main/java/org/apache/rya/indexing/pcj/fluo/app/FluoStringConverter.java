@@ -43,7 +43,7 @@ import edu.umd.cs.findbugs.annotations.DefaultAnnotation;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
- * Contains method that convert between the Sesame representations of RDF
+ * Contains method that convert between the RDF4J representations of RDF
  * components and the Strings that are used by the Fluo PCJ application.
  */
 @DefaultAnnotation(NonNull.class)

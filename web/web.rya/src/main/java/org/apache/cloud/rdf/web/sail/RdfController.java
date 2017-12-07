@@ -34,8 +34,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.rya.api.RdfCloudTripleStoreConfiguration;
 import org.apache.rya.api.security.SecurityProvider;
-import org.apache.rya.api.utils.RdfFormatUtils;
 import org.apache.rya.rdftriplestore.RdfCloudTripleStoreConnection;
+import org.apache.rya.rdftriplestore.utils.RdfFormatUtils;
 import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.query.BindingSet;

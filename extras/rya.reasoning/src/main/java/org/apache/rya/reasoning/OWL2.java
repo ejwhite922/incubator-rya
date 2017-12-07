@@ -24,7 +24,7 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 
 /**
- * Some useful OWL 2 URIs not in Sesame API.
+ * Some useful OWL 2 URIs not in RDF4J API.
  */
 public class OWL2 {
     private static IRI uri(String local) {

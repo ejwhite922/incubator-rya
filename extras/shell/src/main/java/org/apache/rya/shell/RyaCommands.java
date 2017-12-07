@@ -29,7 +29,7 @@ import java.util.Objects;
 
 import org.apache.rya.api.client.RyaClient;
 import org.apache.rya.api.client.RyaClientException;
-import org.apache.rya.api.utils.RdfFormatUtils;
+import org.apache.rya.rdftriplestore.utils.RdfFormatUtils;
 import org.apache.rya.shell.SharedShellState.ShellState;
 import org.apache.rya.shell.util.ConsolePrinter;
 import org.apache.rya.shell.util.SparqlPrompt;

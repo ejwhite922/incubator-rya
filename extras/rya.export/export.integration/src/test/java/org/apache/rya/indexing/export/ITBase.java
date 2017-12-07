@@ -193,7 +193,7 @@ public abstract class ITBase {
     }
 
     /**
-     * A helper function for creating a Sesame {@link Statement} that represents
+     * A helper function for creating a RDF4J {@link Statement} that represents
      * a Triple..
      *
      * @param subject

@@ -21,7 +21,7 @@
 -->
 # Named Graphs
 
-Named graphs are supported simply in the Rdf Store in a few ways. OpenRdf supports sending `contexts` as each triple is saved.
+Named graphs are supported simply in the Rdf Store in a few ways. RDF4J supports sending `contexts` as each triple is saved.
 
 ## Simple Named Graph Load and Query
 

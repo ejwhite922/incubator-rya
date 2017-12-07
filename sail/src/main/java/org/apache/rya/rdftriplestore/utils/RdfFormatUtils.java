@@ -16,10 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.rya.api.utils;
+package org.apache.rya.rdftriplestore.utils;
 
+import java.util.Optional;
 import java.util.Set;
 
+import org.eclipse.rdf4j.common.lang.FileFormat;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFParserRegistry;
 
@@ -27,7 +29,10 @@ import org.eclipse.rdf4j.rio.RDFParserRegistry;
  * Utility methods for {@link RDFFormat}.
  */
 public final class RdfFormatUtils {
-    private static final Set<RDFFormat> RDF_FORMATS = RDFParserRegistry.getInstance().getKeys();
+    /**
+     * Holds all supported {@link RDFFormat} types.
+     */
+    public static final Set<RDFFormat> RDF_FORMATS = RDFParserRegistry.getInstance().getKeys();
 
     /**
      * Private constructor to prevent instantiation.
@@ -48,5 +53,33 @@ public final class RdfFormatUtils {
             }
         }
         return null;
+    }
+
+    /**
+     * Tries to determine the appropriate RDF file format based on the extension
+     * of a file name.
+     * @param fileName A file name.
+     * @return An {@link RDFFormat} object if the file extension was recognized,
+     * or {@code null} otherwise.
+     */
+    public static RDFFormat forFileName(final String fileName) {
+        return forFileName(fileName, null);
+    }
+
+    /**
+     * Tries to determine the appropriate RDF file format based on the extension
+     * of a file name. The supplied fallback format will be returned when the
+     * file name extension was not recognized.
+     * @param fileName A file name.
+     * @return An {@link RDFFormat} that matches the file name extension, or the
+     * fallback format if the extension was not recognized.
+     */
+    public static RDFFormat forFileName(final String fileName, final RDFFormat fallback) {
+        final Optional<RDFFormat> match = FileFormat.matchFileName(fileName, RDF_FORMATS);
+        if (match.isPresent()) {
+            return match.get();
+        } else {
+            return fallback;
+        }
     }
 }

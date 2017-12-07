@@ -42,7 +42,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.rya.accumulo.mr.MRUtils;
-import org.apache.rya.api.utils.RdfFormatUtils;
+import org.apache.rya.rdftriplestore.utils.RdfFormatUtils;
 import org.apache.rya.reasoning.Fact;
 import org.apache.rya.reasoning.Schema;
 import org.eclipse.rdf4j.RDF4JException;
