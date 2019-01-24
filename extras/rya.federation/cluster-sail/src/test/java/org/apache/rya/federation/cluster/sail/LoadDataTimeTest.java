@@ -24,11 +24,9 @@ import java.util.Map.Entry;
 import org.apache.accumulo.core.client.Scanner;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Value;
-import org.apache.rya.federation.cluster.sail.OverlapList;
 
 /**
  *
- * @author vagrant
  */
 public class LoadDataTimeTest {
     public static void main(final String[] args) throws Exception {
@@ -37,9 +35,6 @@ public class LoadDataTimeTest {
         final String zkServer1 = "192.168.33.50:2181";
         final String username = "root";
         final String password = "root";
-
-//        final Iterator<Entry<Key, Value>> iterator1;
-//        final Iterator<Entry<Key, Value>> iterator2;
 
         final OverlapList ol1 = new OverlapList(zkServer1, instanceName);
         ol1.createConnection(username, password);

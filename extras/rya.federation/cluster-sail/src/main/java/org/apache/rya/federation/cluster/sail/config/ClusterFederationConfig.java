@@ -18,31 +18,7 @@
  */
 package org.apache.rya.federation.cluster.sail.config;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-/**
- *
- * @author vagrant
- */
-
-/*
- * Licensed to Aduna under one or more contributor license agreements.
- * See the NOTICE.txt file distributed with this work for additional
- * information regarding copyright ownership.
- *
- * Aduna licenses this file to you under the terms of the Aduna BSD
- * License (the "License"); you may not use this file except in compliance
- * with the License. See the LICENSE.txt file distributed with this work
- * for the full License.
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
- * implied. See the License for the specific language governing permissions
- * and limitations under the License.
- */
-
-
+import static java.util.Objects.requireNonNull;
 import static org.openrdf.repository.config.RepositoryImplConfigBase.create;
 
 import java.util.ArrayList;
@@ -118,9 +94,9 @@ public class ClusterFederationConfig extends SailImplConfigBase {
      */
     public static final URI PASSWORD = new URIImpl(NAMESPACE + "password");
 
-    private List<RepositoryImplConfig> members = new ArrayList<RepositoryImplConfig>();
+    private List<RepositoryImplConfig> members = new ArrayList<>();
 
-    private final Set<String> localPropertySpace = new HashSet<String>(); // NOPMD
+    private final Set<String> localPropertySpace = new HashSet<>(); // NOPMD
 
     private boolean distinct;
 
@@ -183,7 +159,7 @@ public class ClusterFederationConfig extends SailImplConfigBase {
      * @param instanceName the accumulo instance name. (not null)
      */
     public void setInstanceName(final String instanceName) {
-        this.instanceName = checkNotNull(instanceName);
+        this.instanceName = requireNonNull(instanceName);
     }
     /**
      * @return the accumulo table name.
@@ -196,7 +172,7 @@ public class ClusterFederationConfig extends SailImplConfigBase {
      * @param tableName the accumulo table name. (not null)
      */
     public void setTableName(final String tableName) {
-        this.tableName = checkNotNull(tableName);
+        this.tableName = requireNonNull(tableName);
     }
     /**
      * @return the zookeeper host server.
@@ -209,7 +185,7 @@ public class ClusterFederationConfig extends SailImplConfigBase {
      * @param zkServer the zookeeper host server. (not null)
      */
     public void setZkServer(final String zkServers) {
-        this.zkServer = checkNotNull(zkServers);
+        this.zkServer = requireNonNull(zkServers);
     }
     /**
      * @return the accumulo username.
@@ -222,7 +198,7 @@ public class ClusterFederationConfig extends SailImplConfigBase {
      * @param username the accumulo username. (not null)
      */
     public void setUsername(final String username) {
-        this.username = checkNotNull(username);
+        this.username = requireNonNull(username);
     }
     /**
      * @return the accumulo user password.
@@ -235,7 +211,7 @@ public class ClusterFederationConfig extends SailImplConfigBase {
      * @param password the accumulo user password. (not null)
      */
     public void setPassword(final String password) {
-        this.password = checkNotNull(password);
+        this.password = requireNonNull(password);
     }
 
     @Override

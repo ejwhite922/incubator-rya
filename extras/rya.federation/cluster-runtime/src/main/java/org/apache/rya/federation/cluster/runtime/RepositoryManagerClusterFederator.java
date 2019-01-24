@@ -53,12 +53,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
- * @author vagrant
+ * Utility class for handling the details of cluster federating
+ * "user repositories" managed by a
+ * {@link org.openrdf.repository.manager.RepositoryManager}.
  */
 public class RepositoryManagerClusterFederator extends RepositoryManagerFederator {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RepositoryManagerClusterFederator.class);
+    private static final Logger log = LoggerFactory.getLogger(RepositoryManagerClusterFederator.class);
 
     private final RepositoryManager manager;
 
@@ -114,7 +115,7 @@ public class RepositoryManagerClusterFederator extends RepositoryManagerFederato
         }
         final Graph graph = new LinkedHashModel();
         final BNode fedRepoNode = valueFactory.createBNode();
-        LOGGER.debug("Cluster Federation repository root node: {}", fedRepoNode);
+        log.debug("Cluster Federation repository root node: {}", fedRepoNode);
         addToGraph(graph, fedRepoNode, RDF.TYPE, RepositoryConfigSchema.REPOSITORY);
         addToGraph(graph, fedRepoNode, RepositoryConfigSchema.REPOSITORYID, valueFactory.createLiteral(fedID));
         addToGraph(graph, fedRepoNode, RDFS.LABEL, valueFactory.createLiteral(description));
@@ -159,7 +160,7 @@ public class RepositoryManagerClusterFederator extends RepositoryManagerFederato
     private void addMember(final Graph graph, final BNode sailRoot, final String identifier, final RepositoryConnection con)
         throws OpenRDFException, MalformedURLException
     {
-        LOGGER.debug("Adding member: {}", identifier);
+        log.debug("Adding member: {}", identifier);
         final BNode memberNode = valueFactory.createBNode();
         addToGraph(graph, sailRoot, ClusterFederationConfig.MEMBER, memberNode);
         String memberRepoType = manager.getRepositoryConfig(identifier).getRepositoryImplConfig().getType();
@@ -171,7 +172,7 @@ public class RepositoryManagerClusterFederator extends RepositoryManagerFederato
                 valueFactory.createLiteral(memberRepoType));
         addToGraph(graph, memberNode, getLocationPredicate(memberRepoType),
                 getMemberLocator(identifier, con, memberRepoType));
-        LOGGER.debug("Added member {}: ", identifier);
+        log.debug("Added member {}: ", identifier);
     }
 
     private URI getLocationPredicate(final String memberRepoType) {
@@ -205,8 +206,8 @@ public class RepositoryManagerClusterFederator extends RepositoryManagerFederato
     }
 
     private static void addToGraph(final Graph graph, final Resource subject, final URI predicate, final Value object) {
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(subject + " " + predicate + " " + object);
+        if (log.isDebugEnabled()) {
+            log.debug(subject + " " + predicate + " " + object);
         }
         graph.add(subject, predicate, object);
     }

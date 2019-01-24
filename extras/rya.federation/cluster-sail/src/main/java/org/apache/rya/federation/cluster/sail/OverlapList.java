@@ -18,7 +18,7 @@
  */
 package org.apache.rya.federation.cluster.sail;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Objects.requireNonNull;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
@@ -63,8 +63,8 @@ public class OverlapList {
      * @param instanceName the accumulo instance name. (not null)
      */
     public OverlapList(final String zkServer, final String instanceName) {
-        this.zkServer = checkNotNull(zkServer);
-        this.instanceName = checkNotNull(instanceName);
+        this.zkServer = requireNonNull(zkServer);
+        this.instanceName = requireNonNull(instanceName);
 //        this.tableName = tableName;
     }
 
@@ -232,7 +232,7 @@ public class OverlapList {
 //        at.deleteData(rowID, rowValue);
         // Scan data
         final Iterator<Map.Entry<Key,Value>> iterator = sc.iterator();
-//       final Set<String> result = new HashSet<String>();
+//       final Set<String> result = new HashSet<>();
 
         while (iterator.hasNext()) {
             final Map.Entry<Key,Value> entry = iterator.next();

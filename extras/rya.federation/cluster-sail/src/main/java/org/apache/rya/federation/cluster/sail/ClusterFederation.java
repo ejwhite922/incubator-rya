@@ -18,7 +18,7 @@
  */
 package org.apache.rya.federation.cluster.sail;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Objects.requireNonNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,9 +37,9 @@ import org.slf4j.LoggerFactory;
  * Union multiple (possibly remote) Repositories into a single RDF store.
  */
 public class ClusterFederation extends Federation {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ClusterFederation.class);
+    private static final Logger log = LoggerFactory.getLogger(ClusterFederation.class);
 
-    private final List<Repository> members = new ArrayList<Repository>();
+    private final List<Repository> members = new ArrayList<>();
     private final ClusterFederationConfig config;
 
     /**
@@ -54,7 +54,7 @@ public class ClusterFederation extends Federation {
      * @param config the {@link ClusterFederationConfig}. (not null)
      */
     public ClusterFederation(final ClusterFederationConfig config) {
-        this.config = checkNotNull(config);
+        this.config = requireNonNull(config);
     }
 
     /**
@@ -71,8 +71,8 @@ public class ClusterFederation extends Federation {
 
     @Override
     public SailConnection getConnection() throws SailException {
-        LOGGER.debug("cluster federation get connection");
-        final List<RepositoryConnection> connections = new ArrayList<RepositoryConnection>(members.size());
+        log.debug("cluster federation get connection");
+        final List<RepositoryConnection> connections = new ArrayList<>(members.size());
         try {
             for (final Repository member : members) {
                 connections.add(member.getConnection());
@@ -82,8 +82,6 @@ public class ClusterFederation extends Federation {
                     : new WritableClusterConnection(this, connections);
         } catch (final RepositoryException e) {
             throw new SailException(e);
-        } catch (final RuntimeException e) {
-            throw e;
         }
     }
 }

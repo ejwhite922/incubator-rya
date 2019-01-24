@@ -37,7 +37,6 @@ import org.apache.accumulo.core.security.Authorizations;
 
 /**
  *
- * @author vagrant
  */
 public class NHopOverlapTest {
     public static void computeClosure(final Connector conn1, final Connector conn2, final String tableSPO, final Set<String> newOverlap) throws TableNotFoundException {
@@ -94,8 +93,8 @@ public class NHopOverlapTest {
 
         final String password = "root";
 
-        final Set<String> overlap = new HashSet<String>();
-        final Set<String> newOverlap = new HashSet<String>();
+        final Set<String> overlap = new HashSet<>();
+        final Set<String> newOverlap = new HashSet<>();
 
         final Instance inst1 = new ZooKeeperInstance(instanceName, zkServer1);
         final Connector conn1 = inst1.getConnector(username, new PasswordToken(password));
@@ -120,7 +119,7 @@ public class NHopOverlapTest {
 
         final long start = System.currentTimeMillis();
 
-//        final Map<String,List<String>> so = new HashMap<String, List<String>>();
+//        final Map<String, List<String>> so = new HashMap<>();
         final Iterator<Entry<Key, Value>> iteratorSPO1 = scanSPO1.iterator();
         while (iteratorSPO1.hasNext()) {
             final Entry<Key,Value> entry = iteratorSPO1.next();
@@ -156,7 +155,7 @@ public class NHopOverlapTest {
         }
 
         for (int hop = 1; hop < N; hop++) {
-            final List<String>contents = new ArrayList<String>();
+            final List<String>contents = new ArrayList<>();
             for (final String content: newOverlap){
                 if (content.contains("org")) {
                     contents.add(content);

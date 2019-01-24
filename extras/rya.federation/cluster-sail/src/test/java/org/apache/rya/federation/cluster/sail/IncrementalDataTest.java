@@ -38,7 +38,6 @@ import org.apache.accumulo.core.security.Authorizations;
 
 /**
  *
- * @author vagrant
  */
 public class IncrementalDataTest {
     public static boolean lookUp(final String URI, final Scanner scan) throws TableNotFoundException {
@@ -53,7 +52,7 @@ public class IncrementalDataTest {
     }
 
     public static void intersectData(final Scanner uriScanner1, final Scanner uriScanner2, final Connector conn, final String tableOverlap) throws AccumuloException, AccumuloSecurityException, TableNotFoundException {
-        final List<String> overlapData = new ArrayList<String>();
+        final List<String> overlapData = new ArrayList<>();
         final Iterator<Entry<Key, Value>> iterator1 = uriScanner1.iterator();
         while (iterator1.hasNext()) {
             final Entry<Key, Value> entry1 = iterator1.next();
@@ -70,7 +69,7 @@ public class IncrementalDataTest {
     }
 
     public static void main(final String[] args) throws Exception {
-        final List<String> triples = new ArrayList<String>();
+        final List<String> triples = new ArrayList<>();
         for (int i = 12; i < 13; i++) {
             for (int j = 270; j < 271; j++) {
                 triples.add("http://www.Department" + i + ".University2.edu/UndergraduateStudent" + j);
@@ -105,7 +104,7 @@ public class IncrementalDataTest {
         final Connector conn5 = inst5.getConnector(username, new PasswordToken(password));
         final Scanner scan5URI = conn5.createScanner(tableURI, new Authorizations());
 
-        final List<String> incrementalData = new ArrayList<String>();
+        final List<String> incrementalData = new ArrayList<>();
         try {
             final long start = System.currentTimeMillis();
 

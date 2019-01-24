@@ -24,11 +24,9 @@ import java.util.Map.Entry;
 import org.apache.accumulo.core.client.Scanner;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Value;
-import org.apache.rya.federation.cluster.sail.OverlapList;
 
 /**
  *
- * @author vagrant
  */
 public class OverlapListQuery7 {
     public static void main(final String[] args) throws Exception {
@@ -283,7 +281,7 @@ public class OverlapListQuery7 {
 //        at.deleteData(rowID, rowValue);
         // Scan data
         final Iterator<Entry<Key, Value>> iterator = sc.iterator();
-//        final Set<String> result = new HashSet<String>();
+//        final Set<String> result = new HashSet<>();
 
         while (iterator.hasNext()) {
             final Entry<Key, Value> entry = iterator.next();

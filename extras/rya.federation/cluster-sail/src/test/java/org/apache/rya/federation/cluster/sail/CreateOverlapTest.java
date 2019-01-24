@@ -36,7 +36,6 @@ import org.apache.accumulo.core.security.Authorizations;
 
 /**
  *
- * @author vagrant
  */
 public class CreateOverlapTest {
     public static void main(final String[] args) throws Exception {
@@ -65,7 +64,7 @@ public class CreateOverlapTest {
         final Instance inst5 = new ZooKeeperInstance(instanceName, zkServer5);
         final Connector conn5 = inst5.getConnector(username, new PasswordToken(password));
 
-        final List<String>overlap = new ArrayList<String>();
+        final List<String>overlap = new ArrayList<>();
 
         final Scanner scan1 = conn1.createScanner(tableURI, new Authorizations());
         final Scanner scan31 = conn3.createScanner(tableNewURI31, new Authorizations());

@@ -18,6 +18,9 @@
  */
 package org.apache.rya.federation.cluster.sail;
 
+import static org.apache.rya.federation.cluster.sail.TestUtils.closeConnection;
+import static org.apache.rya.federation.cluster.sail.TestUtils.closeRepository;
+
 import java.io.File;
 
 import org.openrdf.model.Value;
@@ -34,7 +37,6 @@ import org.slf4j.LoggerFactory;
 
 /**
  *
- * @author vagrant
  */
 public class IndexingTest {
     private static final Logger log = LoggerFactory.getLogger(IndexingTest.class);
@@ -93,12 +95,9 @@ public class IndexingTest {
                 System.out.println(bindingSet);
             }
             System.out.println("result size: " + count);
-
-            repo.shutDown();
         } finally {
-            if (con != null) {
-                con.close();
-            }
+            closeConnection(con);
+            closeRepository(repo);
         }
     }
 }

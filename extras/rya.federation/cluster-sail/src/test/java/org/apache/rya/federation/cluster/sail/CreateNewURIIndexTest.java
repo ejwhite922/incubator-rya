@@ -40,39 +40,27 @@ import jcifs.smb.SmbFile;
 
 /**
  *
- * @author vagrant
  */
 public class CreateNewURIIndexTest {
     public static void main(final String[] args) throws Exception {
         final String url13 = "smb://192.168.33.30/share/3";
         final SmbFile file13 = new SmbFile(url13);
-        ObjectInputStream in13 = null;
         BloomFilter instance13 = null;
-        try {
-            in13 = new ObjectInputStream(file13.getInputStream());
+        try (
+            final ObjectInputStream in13 = new ObjectInputStream(file13.getInputStream());
+        ) {
             instance13 = (BloomFilter)in13.readObject();
-        } finally {
-            if (in13 != null) {
-                in13.close();
-            }
-//            file3.close();
         }
 
         final String url15 = "smb://192.168.33.50/share/5";
         final SmbFile file15 = new SmbFile(url15);
 //        final FileInputStream file5 = new FileInputStream("/home/vagrant/share/5");
-        ObjectInputStream in15 = null;
         BloomFilter instance15 = null;
-        try {
-            in15 = new ObjectInputStream(file15.getInputStream());
-
+        try (
+            final ObjectInputStream in15 = new ObjectInputStream(file15.getInputStream());
+        ) {
             // Method for deserialization of object
             instance15 = (BloomFilter)in15.readObject();
-        } finally {
-            if (in15 != null) {
-                in15.close();
-            }
-//            file5.close();
         }
 
         final long start = System.currentTimeMillis();
@@ -80,8 +68,8 @@ public class CreateNewURIIndexTest {
         final long phase2 = System.currentTimeMillis();
         System.out.println(phase2 - start);
 
-        final List<String> overlap13 = new ArrayList<String>();
-        final List<String> overlap15 = new ArrayList<String>();
+        final List<String> overlap13 = new ArrayList<>();
+        final List<String> overlap15 = new ArrayList<>();
         final String instanceName = "dev";
         final String tableURI = "URI_index";
         final String tableNewURI13 = "new_URI_index_13";

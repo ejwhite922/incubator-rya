@@ -53,13 +53,11 @@ import info.aduna.iteration.DistinctIteration;
  * {@link SailConnection}.
  */
 public abstract class AbstractClusterFederationConnection extends AbstractFederationConnection {
-
-    private static final Logger LOGGER = LoggerFactory
-            .getLogger(AbstractClusterFederationConnection.class);
+    private static final Logger log = LoggerFactory.getLogger(AbstractClusterFederationConnection.class);
 
     private final ClusterFederationConfig config;
 
-    private final Set<String> includeSet = new HashSet<String>();
+    private final Set<String> includeSet = new HashSet<>();
 
     private Iterator<Entry<Key, org.apache.accumulo.core.data.Value>> iterator;
 
@@ -88,14 +86,8 @@ public abstract class AbstractClusterFederationConnection extends AbstractFedera
             at.selectTable(tableName);
             final Scanner sc = at.createScanner();
             iterator = sc.iterator();
-        } catch (final TableNotFoundException e) {
-            LOGGER.error("Failed to create overlap list iterator", e);
-        } catch (final AccumuloException e) {
-            LOGGER.error("Failed to create overlap list iterator", e);
-        } catch (final AccumuloSecurityException e) {
-            LOGGER.error("Failed to create overlap list iterator", e);
-        } catch (final TableExistsException e) {
-            LOGGER.error("Failed to create overlap list iterator", e);
+        } catch (final TableNotFoundException | AccumuloException | AccumuloSecurityException | TableExistsException e) {
+            log.error("Failed to create overlap list iterator", e);
         }
 
         while (iterator.hasNext()) {
@@ -110,11 +102,11 @@ public abstract class AbstractClusterFederationConnection extends AbstractFedera
             final boolean includeInferred, final Resource... contexts)
             throws SailException {
 
-        LOGGER.debug("cluster federation get statement internal");
+        log.debug("cluster federation get statement internal");
 
         CloseableIteration<? extends Statement, SailException> cursor = super.getStatementsInternal(subj, pred, obj, includeInferred, contexts);
         if (cursor instanceof DistinctIteration) {
-            cursor = new IntersectOverlapList<Statement, SailException>(cursor, includeSet);
+            cursor = new IntersectOverlapList<>(cursor, includeSet);
         }
 
         return cursor;

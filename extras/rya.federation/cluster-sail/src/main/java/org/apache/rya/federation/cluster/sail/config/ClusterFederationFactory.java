@@ -32,8 +32,7 @@ import org.openrdf.sail.config.SailImplConfig;
 
 
 /**
- *
- * @author vagrant
+ * Creates a cluster federation based on its configuration.
  */
 public class ClusterFederationFactory implements SailFactory, RepositoryResolverClient {
     public static final String SAIL_TYPE = "openrdf:ClusterFederation";

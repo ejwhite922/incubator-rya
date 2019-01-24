@@ -18,11 +18,10 @@
  */
 package org.apache.rya.federation.cluster.sail;
 
-import org.openrdf.model.Value;
-import org.openrdf.query.BindingSet;
-import org.openrdf.query.QueryLanguage;
-import org.openrdf.query.TupleQuery;
-import org.openrdf.query.TupleQueryResult;
+import static org.apache.rya.federation.cluster.sail.TestUtils.closeConnection;
+import static org.apache.rya.federation.cluster.sail.TestUtils.closeRepository;
+import static org.apache.rya.federation.cluster.sail.TestUtils.query;
+
 import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.http.HTTPRepository;
@@ -31,7 +30,6 @@ import org.slf4j.LoggerFactory;
 
 /**
  *
- * @author vagrant
  */
 public class QueryTest {
     private static final Logger log = LoggerFactory.getLogger(QueryTest.class);
@@ -47,9 +45,8 @@ public class QueryTest {
     private static final String REPOSITORY_ID_1 = "large";
 
     public static void main(final String[] args) throws Exception {
-//        final String log4jConfPath = "/home/vagrant/accumulo-1.7.1/conf/log4j.properties";
-//        PropertyConfigurator.configure(log4jConfPath);
         log.info("Starting " + QueryTest.class.getSimpleName() + "...");
+
         // Repository 1
         final Repository repo1 = new HTTPRepository(SESAME_SERVER_1, REPOSITORY_ID_1);
         repo1.initialize();
@@ -75,47 +72,15 @@ public class QueryTest {
                 "    ?x geographis:capital ?capital .\n" +
                 "    ?x geographis:currency ?currency .\n" +
                 "}";
-            final TupleQuery tupleQuery12 = con1.prepareTupleQuery(QueryLanguage.SPARQL, query);
-//            final TupleQuery tupleQuery34 = con34.prepareTupleQuery(QueryLanguage.SPARQL, query);
-//            final TupleQuery tupleQuery1234 = clusterCon1234.prepareTupleQuery(QueryLanguage.SPARQL, query);
 
-            final TupleQueryResult result12 = tupleQuery12.evaluate();
-//            final TupleQueryResult result34 = tupleQuery34.evaluate();
-//            final TupleQueryResult result1234 = tupleQuery1234.evaluate();
+            query(con1, query);
 
             final long end = System.nanoTime();
 
             log.info("" + (end - start));
-            BindingSet bindingSet = null;
-
-//            while (result1234.hasNext()) {
-//                bindingSet = result1234.next();
-//                final Value valueOfX = bindingSet.getValue("x");
-//                log.info(valueOfX);
-//            }
-
-            while (result12.hasNext()) {
-                bindingSet = result12.next();
-                final Value valueOfX = bindingSet.getValue("x");
-                log.info("" + valueOfX);
-            }
-
-//            while (result34.hasNext()) {
-//                bindingSet = result34.next();
-//                final Value valueOfX = bindingSet.getValue("x");
-//                log.info(valueOfX);
-//            }
-
-
-//            TupleQuery tupleQuery_2 = con.prepareTupleQuery(QueryLanguage.SPARQL,
-//                   query_2);
-//            tupleQuery_2.evaluate(resultHandler_2);
-//            log.info("Result count : " + resultHandler_2.getCount());
-            repo1.shutDown();
         } finally {
-            if (con1 != null) {
-                con1.close();
-            }
+            closeConnection(con1);
+            closeRepository(repo1);
         }
     }
 }

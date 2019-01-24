@@ -18,6 +18,9 @@
  */
 package org.apache.rya.federation.cluster.sail;
 
+import static org.apache.rya.federation.cluster.sail.TestUtils.closeConnection;
+import static org.apache.rya.federation.cluster.sail.TestUtils.closeRepository;
+
 import org.openrdf.model.Value;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.QueryLanguage;
@@ -212,17 +215,13 @@ public class FederationTest{
 //            sailRepo1234.shutDown();
 //            sailRepo12.shutDown();
 //            sailRepo34.shutDown();
-            repo1.shutDown();
-//            repo2.shutDown();
-//            repo3.shutDown();
-//            repo4.shutDown();
         } finally {
-//            if (con12 != null) {
-//                con12.close();
-//            }
-            if (con1234 != null) {
-                con1234.close();
-            }
+//            closeConnection(con12);
+            closeConnection(con1234);
+            closeRepository(repo1);
+//            closeRepository(repo2);
+//            closeRepository(repo3);
+//            closeRepository(repo4);
         }
     }
 }

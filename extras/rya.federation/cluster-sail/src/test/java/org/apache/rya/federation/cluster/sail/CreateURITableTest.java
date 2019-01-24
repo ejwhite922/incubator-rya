@@ -35,7 +35,6 @@ import org.apache.accumulo.core.security.Authorizations;
 
 /**
  *
- * @author vagrant
  */
 public class CreateURITableTest {
     public static void main(final String[] args) throws Exception {
@@ -51,7 +50,7 @@ public class CreateURITableTest {
 
         final String password = "root";
 
-        final Set<String> list = new HashSet<String>();
+        final Set<String> list = new HashSet<>();
 
         final Instance inst1 = new ZooKeeperInstance(instanceName, zkServer1);
         final Connector conn1 = inst1.getConnector(username, new PasswordToken(password));

@@ -18,7 +18,7 @@
  */
 package org.apache.rya.federation.cluster.sail;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Objects.requireNonNull;
 
 import java.util.Set;
 
@@ -46,7 +46,7 @@ public class IntersectOverlapList<E, X extends Exception> extends FilterIteratio
      */
     public IntersectOverlapList(final Iteration<? extends E, ? extends X> iter, final Set<String> includeSet) throws X {
         super(iter);
-        this.includeSet = checkNotNull(includeSet);
+        this.includeSet = requireNonNull(includeSet);
     }
 
     @Override

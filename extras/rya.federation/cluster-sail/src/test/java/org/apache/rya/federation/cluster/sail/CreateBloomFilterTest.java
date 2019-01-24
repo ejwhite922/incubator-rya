@@ -37,7 +37,6 @@ import org.apache.hadoop.util.hash.Hash;
 
 /**
  *
- * @author vagrant
  */
 public class CreateBloomFilterTest {
     public static void main(final String[] args) throws Exception {
@@ -67,20 +66,12 @@ public class CreateBloomFilterTest {
             bloomFilter.add(key);
         }
 
-        FileOutputStream file = null;
-        ObjectOutputStream out = null;
-        try {
-            file = new FileOutputStream("/home/vagrant/share/3");
-            out = new ObjectOutputStream(file);
+        try (
+            final FileOutputStream fos = new FileOutputStream("/home/vagrant/share/3");
+            final ObjectOutputStream oos = new ObjectOutputStream(fos)
+        ) {
             // Method for serialization of object
-            out.writeObject(bloomFilter);
-        } finally {
-            if (out != null) {
-                out.close();
-            }
-            if (file != null) {
-                file.close();
-            }
+            oos.writeObject(bloomFilter);
         }
 
         final long end = System.currentTimeMillis();

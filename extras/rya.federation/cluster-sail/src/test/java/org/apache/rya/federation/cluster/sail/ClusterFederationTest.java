@@ -18,7 +18,9 @@
  */
 package org.apache.rya.federation.cluster.sail;
 
-import org.apache.rya.federation.cluster.sail.ClusterFederation;
+import static org.apache.rya.federation.cluster.sail.TestUtils.closeConnection;
+import static org.apache.rya.federation.cluster.sail.TestUtils.closeRepository;
+
 import org.apache.rya.federation.cluster.sail.config.ClusterFederationConfig;
 import org.openrdf.model.Value;
 import org.openrdf.query.BindingSet;
@@ -168,12 +170,9 @@ public class ClusterFederationTest {
             log.info("" + (end - start));
 
             log.info("result size: " + count);
-
-            sailRepo1234.shutDown();
         } finally {
-            if (con12_34 != null) {
-                con12_34.close();
-            }
+            closeConnection(con12_34);
+            closeRepository(sailRepo1234);
         }
     }
 }

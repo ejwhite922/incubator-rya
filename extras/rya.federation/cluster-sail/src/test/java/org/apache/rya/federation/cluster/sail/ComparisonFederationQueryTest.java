@@ -18,6 +18,9 @@
  */
 package org.apache.rya.federation.cluster.sail;
 
+import static org.apache.rya.federation.cluster.sail.TestUtils.closeConnection;
+import static org.apache.rya.federation.cluster.sail.TestUtils.closeRepository;
+
 import org.openrdf.model.Value;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.QueryLanguage;
@@ -31,7 +34,6 @@ import org.slf4j.LoggerFactory;
 
 /**
  *
- * @author vagrant
  */
 public class ComparisonFederationQueryTest {
     private static final Logger log = LoggerFactory.getLogger(ComparisonFederationQueryTest.class);
@@ -127,12 +129,9 @@ public class ComparisonFederationQueryTest {
             }
 
             log.info("result size: " + count);
-
-            repo123456.shutDown();
         } finally {
-            if (con123456 != null) {
-                con123456.close();
-            }
+            closeConnection(con123456);
+            closeRepository(repo123456);
         }
     }
 }
