@@ -39,8 +39,9 @@ class ReadOnlyClusterConnection extends AbstractClusterFederationConnection {
      * @param federation the {@link ClusterFederation} to connect to.
      * @param members the {@link List} of {@link RepositoryConnection}s that
      * are members of the cluster.
+     * @throws SailException
      */
-    public ReadOnlyClusterConnection(final ClusterFederation federation, final List<RepositoryConnection> members) {
+    public ReadOnlyClusterConnection(final ClusterFederation federation, final List<RepositoryConnection> members) throws SailException {
         super(federation, members);
     }
 

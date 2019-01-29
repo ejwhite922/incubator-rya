@@ -18,6 +18,9 @@
  */
 package org.apache.rya.federation.cluster.sail;
 
+import static org.apache.rya.federation.cluster.sail.TestUtils.addURIs;
+import static org.apache.rya.federation.cluster.sail.TestUtils.getTimeElapsed;
+
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map.Entry;
@@ -32,11 +35,15 @@ import org.apache.accumulo.core.client.security.tokens.PasswordToken;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.security.Authorizations;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- *
+ * Tests creating URI table.
  */
 public class CreateURITableTest {
+    private static final Logger log = LoggerFactory.getLogger(CreateURITableTest.class);
+
     public static void main(final String[] args) throws Exception {
         final String instanceName = "dev";
         final String tableURI = "URI_index";
@@ -98,11 +105,11 @@ public class CreateURITableTest {
         if (!ops.exists(tableURI)) {
             ops.create(tableURI);
         }
-        System.out.println("size: " + list.size());
-        TestUtils.addURIs(list, conn1, tableURI);
+        log.info("size: " + list.size());
+        addURIs(list, conn1, tableURI);
 
         final long end = System.currentTimeMillis();
 
-        System.out.println(end - start);
+        log.info("Execution Time: " + getTimeElapsed(start, end));
     }
 }

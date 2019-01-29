@@ -18,17 +18,26 @@
  */
 package org.apache.rya.federation.cluster.sail;
 
+import static org.apache.rya.federation.cluster.sail.TestUtils.getTimeElapsed;
+
 import java.util.Iterator;
 import java.util.Map.Entry;
 
 import org.apache.accumulo.core.client.Scanner;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Value;
+import org.apache.rya.federation.cluster.sail.config.ClusterFederationConfig;
+import org.apache.rya.federation.cluster.sail.overlap.AccumuloOverlapList;
+import org.apache.rya.federation.cluster.sail.overlap.OverlapListDbType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- *
+ * Tests data load time.
  */
 public class LoadDataTimeTest {
+    private static final Logger log = LoggerFactory.getLogger(LoadDataTimeTest.class);
+
     public static void main(final String[] args) throws Exception {
         final String instanceName = "dev";
         final String tableURI = "URI_index";
@@ -36,17 +45,28 @@ public class LoadDataTimeTest {
         final String username = "root";
         final String password = "root";
 
-        final OverlapList ol1 = new OverlapList(zkServer1, instanceName);
-        ol1.createConnection(username, password);
-        ol1.selectTable(tableURI);
+        final ClusterFederationConfig config = new ClusterFederationConfig();
+        config.setInstanceName(instanceName);
+        config.setTableName(tableURI);
+        config.setZkServer(zkServer1);
+        config.setUsername(username);
+        config.setPassword(password);
+        config.setOverlapListDbType(OverlapListDbType.ACCUMULO.toString());
 
-        final Scanner sc1 = ol1.createScanner();
-        final Iterator<Entry<Key, Value>> iterator1 = sc1.iterator();
-        long count = 0;
-        while (iterator1.hasNext()) {
-            count++;
-            iterator1.next();
+        final long start = System.currentTimeMillis();
+        try (final AccumuloOverlapList ol1 = new AccumuloOverlapList(config)) {
+            ol1.setup();
+
+            final Scanner sc1 = ol1.createScanner();
+            final Iterator<Entry<Key, Value>> iterator1 = sc1.iterator();
+            long count = 0;
+            while (iterator1.hasNext()) {
+                count++;
+                iterator1.next();
+            }
+            log.info("Result count: " + count);
+            final long end = System.currentTimeMillis();
+            log.info("Execution Time: " + getTimeElapsed(start, end));
         }
-        System.out.println(count);
     }
 }

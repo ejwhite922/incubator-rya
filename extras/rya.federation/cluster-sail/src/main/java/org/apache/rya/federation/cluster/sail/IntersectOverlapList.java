@@ -30,7 +30,7 @@ import info.aduna.iteration.FilterIteration;
 import info.aduna.iteration.Iteration;
 
 /**
- * The overlap list that holds the IRIs or literals in the current cluster that
+ * The overlap list that holds the URIs or literals in the current cluster that
  * also appear as subject or object in another cluster(s).
  * @param <E> the type to iterate over.
  * @param <X> the type of {@code Exception} to throw.

@@ -37,6 +37,30 @@ under the License.
     </description>
 
     <dependencies>
+        <!-- Rya Dependencies -->
+        <dependency>
+            <groupId>org.apache.rya</groupId>
+            <artifactId>rya.indexing</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.rya</groupId>
+            <artifactId>rya.sail</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.rya</groupId>
+                    <artifactId>rya.prospector</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-log4j12</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>ch.qos.logback</groupId>
+                    <artifactId>logback-classic</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
         <!-- Third Party dependencies -->
         <dependency>
             <groupId>org.apache.accumulo</groupId>
@@ -76,6 +100,12 @@ under the License.
             <groupId>jcifs</groupId>
             <artifactId>jcifs</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.openrdf.sesame</groupId>
+            <artifactId>sesame-store-testsuite</artifactId>
+            <scope>test</scope>
+            <version>${openrdf.sesame.version}</version>
         </dependency>
     </dependencies>
 

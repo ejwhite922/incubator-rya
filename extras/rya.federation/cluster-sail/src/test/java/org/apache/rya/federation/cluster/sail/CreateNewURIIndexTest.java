@@ -18,6 +18,9 @@
  */
 package org.apache.rya.federation.cluster.sail;
 
+import static org.apache.rya.federation.cluster.sail.TestUtils.addURIs;
+import static org.apache.rya.federation.cluster.sail.TestUtils.getTimeElapsed;
+
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -35,16 +38,23 @@ import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.file.keyfunctor.RowFunctor;
 import org.apache.accumulo.core.security.Authorizations;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import jcifs.smb.SmbFile;
 
 /**
- *
+ * Tests creating new URI indexes.
  */
 public class CreateNewURIIndexTest {
+    private static final Logger log = LoggerFactory.getLogger(CreateNewURIIndexTest.class);
+
     public static void main(final String[] args) throws Exception {
         final String url13 = "smb://192.168.33.30/share/3";
         final SmbFile file13 = new SmbFile(url13);
+
+        final long start = System.currentTimeMillis();
+
         BloomFilter instance13 = null;
         try (
             final ObjectInputStream in13 = new ObjectInputStream(file13.getInputStream());
@@ -63,10 +73,9 @@ public class CreateNewURIIndexTest {
             instance15 = (BloomFilter)in15.readObject();
         }
 
-        final long start = System.currentTimeMillis();
-
         final long phase2 = System.currentTimeMillis();
-        System.out.println(phase2 - start);
+        log.info("Execution Time: " + getTimeElapsed(start, phase2));
+
 
         final List<String> overlap13 = new ArrayList<>();
         final List<String> overlap15 = new ArrayList<>();
@@ -103,11 +112,11 @@ public class CreateNewURIIndexTest {
         if (!ops.exists(tableNewURI15)) {
             ops.create(tableNewURI15);
         }
-        TestUtils.addURIs(overlap13, conn1, tableNewURI13);
-        TestUtils.addURIs(overlap15, conn1, tableNewURI15);
+        addURIs(overlap13, conn1, tableNewURI13);
+        addURIs(overlap15, conn1, tableNewURI15);
 
         final long end = System.currentTimeMillis();
 
-        System.out.println(end - phase2);
+        log.info("Phase 2 Execution Time: " + getTimeElapsed(phase2, end));
     }
 }

@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.rya.federation.cluster.sail.config.ClusterFederationConfig;
+import org.apache.rya.rdftriplestore.RyaSailRepository;
 import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
@@ -67,6 +68,32 @@ public class ClusterFederation extends Federation {
     @Override
     public void addMember(final Repository member) {
         members.add(member);
+    }
+
+    @Override
+    public void initialize() throws SailException {
+        for (final Repository member : members) {
+            try {
+                if (!(member instanceof RyaSailRepository)) {
+                    throw new SailException("The Cluster Federation only supports Rya Sail Repositories");
+                }
+                member.initialize();
+            } catch (final RepositoryException e) {
+                throw new SailException(e);
+            }
+        }
+    }
+
+    @Override
+    public void shutDown() throws SailException {
+        for (final Repository member : members) {
+            try {
+                member.shutDown();
+            } catch (final RepositoryException e) {
+                throw new SailException(e);
+            }
+        }
+        super.shutDown();
     }
 
     @Override

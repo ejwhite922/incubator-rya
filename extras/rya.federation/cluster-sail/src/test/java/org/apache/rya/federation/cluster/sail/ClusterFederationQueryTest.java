@@ -20,12 +20,8 @@ package org.apache.rya.federation.cluster.sail;
 
 import static org.apache.rya.federation.cluster.sail.TestUtils.closeConnection;
 import static org.apache.rya.federation.cluster.sail.TestUtils.closeRepository;
+import static org.apache.rya.federation.cluster.sail.TestUtils.performQuery;
 
-import org.openrdf.model.Value;
-import org.openrdf.query.BindingSet;
-import org.openrdf.query.QueryLanguage;
-import org.openrdf.query.TupleQuery;
-import org.openrdf.query.TupleQueryResult;
 import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.http.HTTPRepository;
@@ -33,7 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
+ * Tests querying with cluster federation.
  */
 public class ClusterFederationQueryTest {
     private static final Logger log = LoggerFactory.getLogger(ClusterFederationQueryTest.class);
@@ -130,7 +126,6 @@ public class ClusterFederationQueryTest {
 //            // Remove a repository
 //            manager.removeRepository(repositoryId);
 
-            final long start = System.currentTimeMillis();
             // Execute query
             final String query =
                 "prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
@@ -145,67 +140,21 @@ public class ClusterFederationQueryTest {
                 "    ?X ub:takesCourse ?Z.\n" +
                 "}";
 
-            final TupleQuery tupleQuery12 = con12.prepareTupleQuery(QueryLanguage.SPARQL, query);
-            final TupleQueryResult result12 = tupleQuery12.evaluate();
-            final long phase_1_12 = System.currentTimeMillis();
+            int totalCount = 0;
 
-            final TupleQuery tupleQuery34 = con34.prepareTupleQuery(QueryLanguage.SPARQL, query);
-            final TupleQueryResult result34 = tupleQuery34.evaluate();
-            final long phase_1_34 = System.currentTimeMillis();
-
-            final TupleQuery tupleQuery56 = con56.prepareTupleQuery(QueryLanguage.SPARQL, query);
-            final TupleQueryResult result56 = tupleQuery56.evaluate();
-            final long phase_1_56 = System.currentTimeMillis();
-
-            final TupleQuery tupleQuery1234 = con1234.prepareTupleQuery(QueryLanguage.SPARQL, query);
-            final TupleQueryResult result1234 = tupleQuery1234.evaluate();
-            final long end = System.currentTimeMillis();
-
-            log.info("phase 1_12 time: " + (phase_1_12 - start));
-            log.info("phase 1_34 time: " + (phase_1_34 - phase_1_12));
-            log.info("phase 1_56 time: " + (phase_1_56 - phase_1_34));
-            log.info("phase 2 time: " + (end - phase_1_56));
-
-            BindingSet bindingSet = null;
-            int count = 0;
             log.info("phase1_12:");
-            while (result12.hasNext()) {
-                bindingSet = result12.next();
-                final Value valueOfX = bindingSet.getValue("X");
-                log.trace("X: " + valueOfX);
-                count++;
-            }
-            log.info("result size: " + count);
-            log.info("phase1_34:");
+            totalCount += performQuery(con12, query);
 
-            while (result34.hasNext()) {
-                bindingSet = result34.next();
-                final Value valueOfX = bindingSet.getValue("X");
-                log.trace("X: " + valueOfX);
-                count++;
-            }
-            log.info("result size: " + count);
+            log.info("phase1_34:");
+            totalCount += performQuery(con34, query);
 
             log.info("phase1_56:");
-
-            while (result56.hasNext()) {
-                bindingSet = result56.next();
-                final Value valueOfX = bindingSet.getValue("X");
-                log.trace("X: " + valueOfX);
-                count++;
-            }
-            log.info("result size: " + count);
+            totalCount += performQuery(con56, query);
 
             log.info("phase2:");
+            totalCount += performQuery(con1234, query);
 
-            while (result1234.hasNext()) {
-                bindingSet = result1234.next();
-                final Value valueOfX = bindingSet.getValue("X");
-                log.trace("X: " + valueOfX);
-                count++;
-            }
-
-            log.info("result size: " + count);
+            log.info("Total Count: " + totalCount);
         } finally {
             closeConnection(con1234);
             closeConnection(con56);

@@ -18,6 +18,8 @@
  */
 package org.apache.rya.federation.cluster.sail;
 
+import static org.apache.rya.federation.cluster.sail.TestUtils.getTimeElapsed;
+
 import java.io.FileOutputStream;
 import java.io.ObjectOutputStream;
 import java.util.Iterator;
@@ -34,11 +36,15 @@ import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.file.keyfunctor.RowFunctor;
 import org.apache.accumulo.core.security.Authorizations;
 import org.apache.hadoop.util.hash.Hash;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- *
+ * Tests creating bloom filters.
  */
 public class CreateBloomFilterTest {
+    private static final Logger log = LoggerFactory.getLogger(CreateBloomFilterTest.class);
+
     public static void main(final String[] args) throws Exception {
         final int vectorSize = 100000;
         final int nbHash = 500;
@@ -58,7 +64,7 @@ public class CreateBloomFilterTest {
         final long start = System.currentTimeMillis();
 
         final Iterator<Entry<Key, Value>> iterator = scanURI.iterator();
-        while(iterator.hasNext()){
+        while (iterator.hasNext()) {
             final Entry<Key, Value> entry = iterator.next();
             final Key accumuloKey = entry.getKey();
             final RowFunctor rowFunctor = new RowFunctor();
@@ -76,6 +82,6 @@ public class CreateBloomFilterTest {
 
         final long end = System.currentTimeMillis();
 
-        System.out.println(end - start);
+        log.info("Execution Time: " + getTimeElapsed(start, end));
     }
 }

@@ -33,6 +33,7 @@ import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.client.TableNotFoundException;
 import org.apache.accumulo.core.data.Mutation;
 import org.apache.accumulo.core.data.Value;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.hadoop.io.Text;
 import org.openrdf.query.MalformedQueryException;
 import org.openrdf.query.QueryEvaluationException;
@@ -130,7 +131,7 @@ public final class TestUtils {
 
     /**
      * Queries the connection with the specified SPARQL and prints the binding
-     * set results along with the total count.
+     * set results along with the total count and execution time.
      * @param conn the {@link RepositoryConnection}. (not null)
      * @param query the SPARQL query. (not null)
      * @return the number of binding sets returned from the query.
@@ -139,14 +140,35 @@ public final class TestUtils {
      * @throws TupleQueryResultHandlerException
      * @throws QueryEvaluationException
      */
-    public static int query(final RepositoryConnection conn, final String query) throws RepositoryException, MalformedQueryException, TupleQueryResultHandlerException, QueryEvaluationException {
+    public static int performQuery(final RepositoryConnection conn, final String query) throws RepositoryException, MalformedQueryException, TupleQueryResultHandlerException, QueryEvaluationException {
         requireNonNull(conn);
         requireNonNull(query);
+
+        log.info("Performing Query:\n" + query);
+
+        final long start = System.currentTimeMillis();
         final CountingResultHandler resultHandler = new CountingResultHandler();
         final TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
         tupleQuery.evaluate(resultHandler);
-        log.info("Result count : " + resultHandler.getCount());
+        final long end = System.currentTimeMillis();
+
+        final String timeElapsedFormatted = getTimeElapsed(start, end);
+        log.info("Query Execution Time: " + timeElapsedFormatted);
+        log.info("Query Result Count : " + resultHandler.getCount());
+
         return resultHandler.getCount();
+    }
+
+    /**
+     * Creates a formatted string of the time elapsed between the start and end
+     * times.
+     * @param start the start time (in milliseconds)
+     * @param end the end time (in milliseconds)
+     * @return the formatted time elapsed string.
+     */
+    public static String getTimeElapsed(final long start, final long end) {
+        final String timeElapsedFormatted = DurationFormatUtils.formatDuration(end - start, "mm 'mins' ss.S 'secs'");
+        return timeElapsedFormatted;
     }
 
     /**

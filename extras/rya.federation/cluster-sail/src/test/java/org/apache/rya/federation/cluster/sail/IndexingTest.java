@@ -20,14 +20,10 @@ package org.apache.rya.federation.cluster.sail;
 
 import static org.apache.rya.federation.cluster.sail.TestUtils.closeConnection;
 import static org.apache.rya.federation.cluster.sail.TestUtils.closeRepository;
+import static org.apache.rya.federation.cluster.sail.TestUtils.performQuery;
 
 import java.io.File;
 
-import org.openrdf.model.Value;
-import org.openrdf.query.BindingSet;
-import org.openrdf.query.QueryLanguage;
-import org.openrdf.query.TupleQuery;
-import org.openrdf.query.TupleQueryResult;
 import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.http.HTTPRepository;
@@ -77,24 +73,7 @@ public class IndexingTest {
                 "    ?X rdf:type ub:GraduateStudent .\n" +
                 "}";
 
-            final TupleQuery tupleQuery = con.prepareTupleQuery(QueryLanguage.SPARQL, query);
-            final TupleQueryResult result = tupleQuery.evaluate();
-
-            BindingSet bindingSet = null;
-            int count = 0;
-
-            while(result.hasNext()){
-                bindingSet = result.next();
-                final Value valueOfX = bindingSet.getValue("X");
-                final Value valueOfY = bindingSet.getValue("Y");
-                final Value valueOfZ = bindingSet.getValue("Z");
-                count++;
-                System.out.println("X: " + valueOfX);
-                System.out.println("Y: " + valueOfY);
-                System.out.println("Z: " + valueOfZ);
-                System.out.println(bindingSet);
-            }
-            System.out.println("result size: " + count);
+            performQuery(con, query);
         } finally {
             closeConnection(con);
             closeRepository(repo);

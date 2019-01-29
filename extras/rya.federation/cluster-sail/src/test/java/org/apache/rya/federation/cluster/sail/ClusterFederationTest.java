@@ -20,13 +20,9 @@ package org.apache.rya.federation.cluster.sail;
 
 import static org.apache.rya.federation.cluster.sail.TestUtils.closeConnection;
 import static org.apache.rya.federation.cluster.sail.TestUtils.closeRepository;
+import static org.apache.rya.federation.cluster.sail.TestUtils.performQuery;
 
 import org.apache.rya.federation.cluster.sail.config.ClusterFederationConfig;
-import org.openrdf.model.Value;
-import org.openrdf.query.BindingSet;
-import org.openrdf.query.QueryLanguage;
-import org.openrdf.query.TupleQuery;
-import org.openrdf.query.TupleQueryResult;
 import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.http.HTTPRepository;
@@ -35,6 +31,9 @@ import org.openrdf.sail.federation.Federation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Tests cluster federation.
+ */
 public class ClusterFederationTest {
     private static final Logger log = LoggerFactory.getLogger(ClusterFederationTest.class);
 
@@ -134,7 +133,6 @@ public class ClusterFederationTest {
             sailRepo1234.initialize();
             con12_34 = sailRepo1234.getConnection();
 
-            final long start = System.currentTimeMillis();
             // Execute query
             final String query =
                 "prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
@@ -149,27 +147,7 @@ public class ClusterFederationTest {
                 "    ?X ub:takesCourse ?Z.\n" +
                 "}";
 
-            final TupleQuery tupleQuery12_34 = con12_34.prepareTupleQuery(QueryLanguage.SPARQL, query);
-            final TupleQueryResult result12_34 = tupleQuery12_34.evaluate();
-
-            final long end = System.currentTimeMillis();
-
-            BindingSet bindingSet = null;
-            int count = 0;
-            while (result12_34.hasNext()) {
-                bindingSet = result12_34.next();
-                final Value valueOfX = bindingSet.getValue("X");
-                final Value valueOfY = bindingSet.getValue("Y");
-                final Value valueOfZ = bindingSet.getValue("Z");
-                count++;
-                log.info("X: " + valueOfX);
-                log.info("Y: " + valueOfY);
-                log.info("Z: " + valueOfZ);
-            }
-
-            log.info("" + (end - start));
-
-            log.info("result size: " + count);
+            performQuery(con12_34, query);
         } finally {
             closeConnection(con12_34);
             closeRepository(sailRepo1234);

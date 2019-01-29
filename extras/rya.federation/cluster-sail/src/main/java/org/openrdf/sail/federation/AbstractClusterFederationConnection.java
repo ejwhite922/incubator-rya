@@ -19,22 +19,15 @@
 package org.openrdf.sail.federation;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Set;
 
-import org.apache.accumulo.core.client.AccumuloException;
-import org.apache.accumulo.core.client.AccumuloSecurityException;
-import org.apache.accumulo.core.client.Scanner;
-import org.apache.accumulo.core.client.TableExistsException;
-import org.apache.accumulo.core.client.TableNotFoundException;
-import org.apache.accumulo.core.data.Key;
-import org.apache.commons.lang.StringUtils;
 import org.apache.rya.federation.cluster.sail.ClusterFederation;
 import org.apache.rya.federation.cluster.sail.IntersectOverlapList;
 import org.apache.rya.federation.cluster.sail.OverlapList;
 import org.apache.rya.federation.cluster.sail.config.ClusterFederationConfig;
+import org.apache.rya.federation.cluster.sail.exception.OverlapListException;
+import org.apache.rya.federation.cluster.sail.overlap.OverlapListFactory;
 import org.openrdf.model.Resource;
 import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
@@ -59,40 +52,25 @@ public abstract class AbstractClusterFederationConnection extends AbstractFedera
 
     private final Set<String> includeSet = new HashSet<>();
 
-    private Iterator<Entry<Key, org.apache.accumulo.core.data.Value>> iterator;
+    private final OverlapList overlapList;
 
     /**
      * Creates a new instance of {@link AbstractClusterFederationConnection}.
-     * @param federation the {@link ClusterFederation} to connect to.
+     * @param clusterFederation the {@link ClusterFederation} to connect to.
      * @param members the {@link List} of {@link RepositoryConnection}s that
      * are members of the cluster.
+     * @throws SailException
      */
-    public AbstractClusterFederationConnection(final ClusterFederation federation,
-            final List<RepositoryConnection> members) {
-        super(federation, members);
+    public AbstractClusterFederationConnection(final ClusterFederation clusterFederation,
+            final List<RepositoryConnection> members) throws SailException {
+        super(clusterFederation, members);
 
-        this.config = federation.getConfig();
-
-        final String instanceName = StringUtils.defaultIfEmpty(config.getInstanceName(), "dev");
-        final String tableName = StringUtils.defaultIfEmpty(config.getTableName(), "rya_overlap");
-        final String zkServer = StringUtils.defaultIfEmpty(config.getZkServer(), "localhost:2181");
-        final String username = StringUtils.defaultIfEmpty(config.getUsername(), "root");
-        final String password = StringUtils.defaultIfEmpty(config.getPassword(), "root");
-
-        final OverlapList at = new OverlapList(zkServer, instanceName);
+        this.config = clusterFederation.getConfig();
 
         try {
-            at.createConnection(username, password);
-            at.selectTable(tableName);
-            final Scanner sc = at.createScanner();
-            iterator = sc.iterator();
-        } catch (final TableNotFoundException | AccumuloException | AccumuloSecurityException | TableExistsException e) {
-            log.error("Failed to create overlap list iterator", e);
-        }
-
-        while (iterator.hasNext()) {
-            final Entry<Key, org.apache.accumulo.core.data.Value> entry = iterator.next();
-            includeSet.add(entry.getKey().getRow().toString());
+            this.overlapList = OverlapListFactory.getInstance().createOverlapList(config);
+        } catch (final OverlapListException e) {
+            throw new SailException("Unable to create overlap list", e);
         }
     }
 
@@ -103,6 +81,22 @@ public abstract class AbstractClusterFederationConnection extends AbstractFedera
             throws SailException {
 
         log.debug("cluster federation get statement internal");
+
+        try {
+            overlapList.setup();
+            includeSet.addAll(overlapList.getOverlaps());
+        } catch (final OverlapListException e) {
+            throw new SailException("Failed to find overlaps", e);
+        }
+
+//        CloseableIteration<? extends Statement, SailException> cursor = union(new Function<Statement>() {
+//
+//            public CloseableIteration<? extends Statement, RepositoryException> call(
+//                    RepositoryConnection member) throws RepositoryException {
+//                return member.getStatements(subj, pred, obj, includeInferred,
+//                        contexts);
+//            }
+//        });
 
         CloseableIteration<? extends Statement, SailException> cursor = super.getStatementsInternal(subj, pred, obj, includeInferred, contexts);
         if (cursor instanceof DistinctIteration) {

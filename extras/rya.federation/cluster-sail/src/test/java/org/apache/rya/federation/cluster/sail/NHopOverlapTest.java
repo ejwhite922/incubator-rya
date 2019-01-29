@@ -18,6 +18,9 @@
  */
 package org.apache.rya.federation.cluster.sail;
 
+import static org.apache.rya.federation.cluster.sail.TestUtils.addURIs;
+import static org.apache.rya.federation.cluster.sail.TestUtils.getTimeElapsed;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -34,11 +37,15 @@ import org.apache.accumulo.core.client.security.tokens.PasswordToken;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.security.Authorizations;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- *
+ * Tests N-Hop overlap.
  */
 public class NHopOverlapTest {
+    private static final Logger log = LoggerFactory.getLogger(NHopOverlapTest.class);
+
     public static void computeClosure(final Connector conn1, final Connector conn2, final String tableSPO, final Set<String> newOverlap) throws TableNotFoundException {
         final Scanner scanSPO1 = conn1.createScanner(tableSPO, new Authorizations());
         final Scanner scanSPO2 = conn2.createScanner(tableSPO, new Authorizations());
@@ -52,10 +59,10 @@ public class NHopOverlapTest {
             final String subject = pattern[0];
             String object = pattern[2].replaceAll("\\x01\\x02", "");
             object = object.replaceAll("\\x01\\x03", "");
-            if (newOverlap.contains(subject) && !key.contains("type")  && !key.contains("DegreeFrom") && !key.contains("Publication")) {
+            if (newOverlap.contains(subject) && !key.contains("type") && !key.contains("DegreeFrom") && !key.contains("Publication")) {
                 newOverlap.add(object);
             }
-            if (newOverlap.contains(object) && !key.contains("type")  && !key.contains("DegreeFrom") && !key.contains("Publication")) {
+            if (newOverlap.contains(object) && !key.contains("type") && !key.contains("DegreeFrom") && !key.contains("Publication")) {
                 newOverlap.add(subject);
             }
         }
@@ -68,10 +75,10 @@ public class NHopOverlapTest {
             final String subject = pattern[0];
             String object = pattern[2].replaceAll("\\x01\\x02", "");
             object = object.replaceAll("\\x01\\x03", "");
-            if (newOverlap.contains(subject)  && !(key.contains("type"))){
+            if (newOverlap.contains(subject) && !(key.contains("type"))) {
                 newOverlap.add(object);
             }
-            if (newOverlap.contains(object)  && !(key.contains("type"))){
+            if (newOverlap.contains(object) && !(key.contains("type"))) {
                 newOverlap.add(subject);
             }
         }
@@ -115,30 +122,30 @@ public class NHopOverlapTest {
             overlap.add(key);
         }
 
-        System.out.println("size: " + overlap.size());
+        log.info("size: " + overlap.size());
 
         final long start = System.currentTimeMillis();
 
 //        final Map<String, List<String>> so = new HashMap<>();
         final Iterator<Entry<Key, Value>> iteratorSPO1 = scanSPO1.iterator();
         while (iteratorSPO1.hasNext()) {
-            final Entry<Key,Value> entry = iteratorSPO1.next();
+            final Entry<Key, Value> entry = iteratorSPO1.next();
             key = entry.getKey().getRow().toString();
             final String [] pattern = key.split("\\x00");
             final String subject = pattern[0];
             String object = pattern[2].replaceAll("\\x01\\x02", "");
             object = object.replaceAll("\\x01\\x03", "");
 
-            if (overlap.contains(subject) && !(key.contains("type"))){
+            if (overlap.contains(subject) && !(key.contains("type"))) {
                 newOverlap.add(object);
             }
-            if (overlap.contains(object) && !(key.contains("type")) && !(key.contains("DegreeFrom")) && !(key.contains("Publication")) ){
+            if (overlap.contains(object) && !(key.contains("type")) && !(key.contains("DegreeFrom")) && !(key.contains("Publication"))) {
                 newOverlap.add(subject);
             }
         }
 
         final Iterator<Entry<Key, Value>> iteratorSPO2 = scanSPO2.iterator();
-        while (iteratorSPO2.hasNext()){
+        while (iteratorSPO2.hasNext()) {
             final Entry<Key, Value> entry = iteratorSPO2.next();
             key = entry.getKey().getRow().toString();
             final String [] pattern = key.split("\\x00");
@@ -146,7 +153,7 @@ public class NHopOverlapTest {
             String object = pattern[2].replaceAll("\\x01\\x02", "");
             object = object.replaceAll("\\x01\\x03", "");
 
-            if (overlap.contains(subject) && !key.contains("type")  && !key.contains("DegreeFrom") && !key.contains("Publication")) {
+            if (overlap.contains(subject) && !key.contains("type") && !key.contains("DegreeFrom") && !key.contains("Publication")) {
                 newOverlap.add(object);
             }
             if (overlap.contains(object) && !key.contains("type") && !key.contains("DegreeFrom") && !key.contains("Publication")) {
@@ -155,22 +162,22 @@ public class NHopOverlapTest {
         }
 
         for (int hop = 1; hop < N; hop++) {
-            final List<String>contents = new ArrayList<>();
-            for (final String content: newOverlap){
+            final List<String> contents = new ArrayList<>();
+            for (final String content : newOverlap) {
                 if (content.contains("org")) {
                     contents.add(content);
                 }
             }
             newOverlap.removeAll(contents);
-            System.out.println("1st: " + newOverlap.size());
+            log.info("1st: " + newOverlap.size());
 //            computeClosure(conn1, conn2, tableSPO, newOverlap);
         }
 
-        System.out.println("2nd: " + newOverlap.size());
-        TestUtils.addURIs(newOverlap, conn1, tableOverlap);
+        log.info("2nd: " + newOverlap.size());
+        addURIs(newOverlap, conn1, tableOverlap);
 
         final long end = System.currentTimeMillis();
 
-        System.out.println(end - start);
+        log.info("Execution Time: " + getTimeElapsed(start, end));
     }
 }

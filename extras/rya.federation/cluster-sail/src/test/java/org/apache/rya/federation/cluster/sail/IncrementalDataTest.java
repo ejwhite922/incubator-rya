@@ -18,6 +18,10 @@
  */
 package org.apache.rya.federation.cluster.sail;
 
+import static org.apache.rya.federation.cluster.sail.TestUtils.addURI;
+import static org.apache.rya.federation.cluster.sail.TestUtils.addURIs;
+import static org.apache.rya.federation.cluster.sail.TestUtils.getTimeElapsed;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -35,20 +39,24 @@ import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Range;
 import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.security.Authorizations;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- *
+ * Tests incremental data addition.
  */
 public class IncrementalDataTest {
-    public static boolean lookUp(final String URI, final Scanner scan) throws TableNotFoundException {
-        scan.setRange(Range.exact(URI));
-        final Iterator<Entry<Key,Value>> iterator = scan.iterator();
+    private static final Logger log = LoggerFactory.getLogger(IncrementalDataTest.class);
+
+    public static boolean lookUp(final String uri, final Scanner scan) throws TableNotFoundException {
+        scan.setRange(Range.exact(uri));
+        final Iterator<Entry<Key, Value>> iterator = scan.iterator();
         return iterator.hasNext();
     }
 
-    public static void intersectOverlap(final String URI, final Connector conn, final Connector conn2, final String tableOverlap) throws AccumuloException, AccumuloSecurityException, TableNotFoundException {
-        TestUtils.addURI(URI, conn, tableOverlap);
-        TestUtils.addURI(URI, conn2, tableOverlap);
+    public static void intersectOverlap(final String uri, final Connector conn, final Connector conn2, final String tableOverlap) throws AccumuloException, AccumuloSecurityException, TableNotFoundException {
+        addURI(uri, conn, tableOverlap);
+        addURI(uri, conn2, tableOverlap);
     }
 
     public static void intersectData(final Scanner uriScanner1, final Scanner uriScanner2, final Connector conn, final String tableOverlap) throws AccumuloException, AccumuloSecurityException, TableNotFoundException {
@@ -64,7 +72,7 @@ public class IncrementalDataTest {
             }
         }
         if (!overlapData.isEmpty()) {
-            TestUtils.addURIs(overlapData, conn, tableOverlap);
+            addURIs(overlapData, conn, tableOverlap);
         }
     }
 
@@ -110,25 +118,25 @@ public class IncrementalDataTest {
 
             for (final String triple : triples) {
                 if (!lookUp(triple, scan1URI)) {
-                    System.out.println("new URI: " + triple);
+                    log.info("new URI: " + triple);
                     incrementalData.add(triple);
                 }
             }
 
             if (!incrementalData.isEmpty()) {
-                TestUtils.addURIs(incrementalData, conn1, tableURI);
-                TestUtils.addURIs(incrementalData, conn1, tableNewURI);
+                addURIs(incrementalData, conn1, tableURI);
+                addURIs(incrementalData, conn1, tableNewURI);
             }
             final long phase1 = System.currentTimeMillis();
-            System.out.println("phase 1 execution time: " + (phase1 - start));
+            log.info("phase 1 execution time: " + getTimeElapsed(start, phase1));
 
             intersectData(scan1NewURI, scan3URI, conn3, tableOverlap);
             intersectData(scan1NewURI, scan5URI, conn5, tableOverlap);
 
             final long end = System.currentTimeMillis();
-            System.out.println("phase 2 execution time: " + (end - phase1));
+            log.info("phase 2 execution time: " + getTimeElapsed(phase1, end));
         } catch (final TableNotFoundException e) {
-            e.printStackTrace();
+            log.error("Table not found", e);
         }
     }
 }

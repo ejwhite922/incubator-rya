@@ -20,7 +20,7 @@ package org.apache.rya.federation.cluster.sail;
 
 import static org.apache.rya.federation.cluster.sail.TestUtils.closeConnection;
 import static org.apache.rya.federation.cluster.sail.TestUtils.closeRepository;
-import static org.apache.rya.federation.cluster.sail.TestUtils.query;
+import static org.apache.rya.federation.cluster.sail.TestUtils.performQuery;
 
 import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryConnection;
@@ -29,7 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
+ * Tests repository query.
  */
 public class QueryTest {
     private static final Logger log = LoggerFactory.getLogger(QueryTest.class);
@@ -58,7 +58,6 @@ public class QueryTest {
 
             con1 = repo1.getConnection();
 
-            final long start = System.nanoTime();
             // Execute query
             final String query =
                 "PREFIX code:<http://telegraphis.net/ontology/measurement/code#>\n" +
@@ -73,11 +72,7 @@ public class QueryTest {
                 "    ?x geographis:currency ?currency .\n" +
                 "}";
 
-            query(con1, query);
-
-            final long end = System.nanoTime();
-
-            log.info("" + (end - start));
+            performQuery(con1, query);
         } finally {
             closeConnection(con1);
             closeRepository(repo1);

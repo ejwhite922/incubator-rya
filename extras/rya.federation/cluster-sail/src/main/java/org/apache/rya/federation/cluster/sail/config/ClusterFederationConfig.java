@@ -26,6 +26,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.rya.api.RdfCloudTripleStoreConfiguration;
+import org.apache.rya.rdftriplestore.RyaSailRepository;
 import org.openrdf.model.Graph;
 import org.openrdf.model.Literal;
 import org.openrdf.model.Resource;
@@ -94,6 +96,21 @@ public class ClusterFederationConfig extends SailImplConfigBase {
      */
     public static final URI PASSWORD = new URIImpl(NAMESPACE + "password");
 
+    /**
+     * The overlap list database type.
+     */
+    public static final URI OVERLAP_LIST_DB_TYPE = new URIImpl(NAMESPACE + "overlapListDbType");
+
+    /**
+     * The mongodb hostname.
+     */
+    public static final URI MONGO_HOSTNAME = new URIImpl(NAMESPACE + "mongoHostname");
+
+    /**
+     * The mongodb port.
+     */
+    public static final URI MONGO_PORT = new URIImpl(NAMESPACE + "mongoPort");
+
     private List<RepositoryImplConfig> members = new ArrayList<>();
 
     private final Set<String> localPropertySpace = new HashSet<>(); // NOPMD
@@ -101,6 +118,8 @@ public class ClusterFederationConfig extends SailImplConfigBase {
     private boolean distinct;
 
     private boolean readOnly;
+
+    private RdfCloudTripleStoreConfiguration rdfCloudTripleStoreConfiguration;
 
     private String instanceName;
 
@@ -111,6 +130,12 @@ public class ClusterFederationConfig extends SailImplConfigBase {
     private String username;
 
     private String password;
+
+    private String overlapListDbType;
+
+    private String mongoHostname;
+
+    private int mongoPort;
 
     public List<RepositoryImplConfig> getMembers() {
         return members;
@@ -149,6 +174,20 @@ public class ClusterFederationConfig extends SailImplConfigBase {
     }
 
     /**
+     * @return the {@link RdfCloudTripleStoreConfiguration}.
+     */
+    public RdfCloudTripleStoreConfiguration getRdfCloudTripleStoreConfiguration() {
+        return rdfCloudTripleStoreConfiguration;
+    }
+
+    /**
+     * @param rdfCloudTripleStoreConfiguration the {@link RdfCloudTripleStoreConfiguration}. (not null)
+     */
+    public void setRdfCloudTripleStoreConfiguration(final RdfCloudTripleStoreConfiguration rdfCloudTripleStoreConfiguration) {
+        this.rdfCloudTripleStoreConfiguration = requireNonNull(rdfCloudTripleStoreConfiguration);
+    }
+
+    /**
      * @return the accumulo instance name.
      */
     public String getInstanceName() {
@@ -161,19 +200,21 @@ public class ClusterFederationConfig extends SailImplConfigBase {
     public void setInstanceName(final String instanceName) {
         this.instanceName = requireNonNull(instanceName);
     }
+
     /**
-     * @return the accumulo table name.
+     * @return the accumulo or mongodb table/collection name.
      */
     public String getTableName() {
         return tableName;
     }
 
     /**
-     * @param tableName the accumulo table name. (not null)
+     * @param tableName the accumulo or mongodb table/collection name. (not null)
      */
     public void setTableName(final String tableName) {
         this.tableName = requireNonNull(tableName);
     }
+
     /**
      * @return the zookeeper host server.
      */
@@ -187,31 +228,75 @@ public class ClusterFederationConfig extends SailImplConfigBase {
     public void setZkServer(final String zkServers) {
         this.zkServer = requireNonNull(zkServers);
     }
+
     /**
-     * @return the accumulo username.
+     * @return the accumulo or mongodb username.
      */
     public String getUsername() {
         return username;
     }
 
     /**
-     * @param username the accumulo username. (not null)
+     * @param username the accumulo or mongodb username. (not null)
      */
     public void setUsername(final String username) {
         this.username = requireNonNull(username);
     }
+
     /**
-     * @return the accumulo user password.
+     * @return the accumulo or mongodb user password.
      */
     public String getPassword() {
         return password;
     }
 
     /**
-     * @param password the accumulo user password. (not null)
+     * @param password the accumulo or mongodb user password. (not null)
      */
     public void setPassword(final String password) {
         this.password = requireNonNull(password);
+    }
+
+    /**
+     * @return the overlap list database type.
+     */
+    public String getOverlapListDbType() {
+        return overlapListDbType;
+    }
+
+    /**
+     * @param overlapListDbType the overlap list database type. (not null)
+     */
+    public void setOverlapListDbType(final String overlapListDbType) {
+        this.overlapListDbType = requireNonNull(overlapListDbType);
+    }
+
+    /**
+     * @return the mongo hostname.
+     */
+    public String getMongoHostname() {
+        return mongoHostname;
+    }
+
+    /**
+     * @param mongoHostname the mongo hostname. (not null)
+     */
+    public void setMongoHostname(final String mongoHostname) {
+        this.mongoHostname = requireNonNull(mongoHostname);
+    }
+
+    /**
+     * @return the mongo port.
+     */
+    public int getMongoPort() {
+        return mongoPort;
+    }
+
+    /**
+     * @param mongoPort the mongo port.
+     */
+    public void setMongoPort(final int mongoPort) {
+        this.mongoPort = mongoPort;
     }
 
     @Override
@@ -231,6 +316,9 @@ public class ClusterFederationConfig extends SailImplConfigBase {
         model.add(self, ZK_SERVER, valueFactory.createLiteral(zkServer));
         model.add(self, USERNAME, valueFactory.createLiteral(username));
         model.add(self, PASSWORD, valueFactory.createLiteral(password));
+        model.add(self, OVERLAP_LIST_DB_TYPE, valueFactory.createLiteral(overlapListDbType));
+        model.add(self, MONGO_HOSTNAME, valueFactory.createLiteral(mongoHostname));
+        model.add(self, MONGO_PORT, valueFactory.createLiteral(mongoPort));
         return self;
     }
 
@@ -285,6 +373,21 @@ public class ClusterFederationConfig extends SailImplConfigBase {
             if (password != null) {
                 this.password = password.stringValue();
             }
+            final Literal overlapListDbType = model.filter(implNode, OVERLAP_LIST_DB_TYPE, null)
+                    .objectLiteral();
+            if (overlapListDbType != null) {
+                this.overlapListDbType = overlapListDbType.stringValue();
+            }
+            final Literal mongoHostname = model.filter(implNode, MONGO_HOSTNAME, null)
+                    .objectLiteral();
+            if (mongoHostname != null) {
+                this.mongoHostname = mongoHostname.stringValue();
+            }
+            final Literal mongoPort = model.filter(implNode, MONGO_PORT, null)
+                    .objectLiteral();
+            if (mongoPort != null) {
+                this.mongoPort = mongoPort.intValue();
+            }
         } catch (final ModelException e) {
             throw new SailConfigException(e);
         }
@@ -298,6 +401,9 @@ public class ClusterFederationConfig extends SailImplConfigBase {
         }
         for (final RepositoryImplConfig member : members) {
             try {
+                if (member instanceof RyaSailRepository) {
+                    throw new SailConfigException("Cluster member must be a Rya Sail Repository");
+                }
                 member.validate();
             } catch (final RepositoryConfigException e) {
                 throw new SailConfigException(e);

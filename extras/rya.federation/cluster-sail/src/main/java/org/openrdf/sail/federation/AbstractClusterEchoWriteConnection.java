@@ -36,8 +36,9 @@ public abstract class AbstractClusterEchoWriteConnection extends AbstractCluster
      * Creates a new instance of {@link AbstractClusterEchoWriteConnection}.
      * @param federation
      * @param members
+     * @throws SailException
      */
-    public AbstractClusterEchoWriteConnection(final ClusterFederation federation, final List<RepositoryConnection> members) {
+    public AbstractClusterEchoWriteConnection(final ClusterFederation federation, final List<RepositoryConnection> members) throws SailException {
         super(federation, members);
     }
 
@@ -140,7 +141,9 @@ public abstract class AbstractClusterEchoWriteConnection extends AbstractCluster
             public void run(final RepositoryConnection con)
                 throws RepositoryException
             {
-                con.remove(subj, pred, obj, contexts);
+                if (subj != null) {
+                    con.remove(subj, pred, obj, contexts);
+                }
             }
         });
     }

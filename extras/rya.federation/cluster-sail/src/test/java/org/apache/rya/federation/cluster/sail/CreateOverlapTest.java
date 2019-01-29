@@ -18,6 +18,9 @@
  */
 package org.apache.rya.federation.cluster.sail;
 
+import static org.apache.rya.federation.cluster.sail.TestUtils.addURIs;
+import static org.apache.rya.federation.cluster.sail.TestUtils.getTimeElapsed;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -33,11 +36,15 @@ import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Range;
 import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.security.Authorizations;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- *
+ * Tests creating overlap list.
  */
 public class CreateOverlapTest {
+    private static final Logger log = LoggerFactory.getLogger(CreateOverlapTest.class);
+
     public static void main(final String[] args) throws Exception {
         final String instanceName = "dev";
         final String tableURI = "URI_index";
@@ -64,7 +71,7 @@ public class CreateOverlapTest {
         final Instance inst5 = new ZooKeeperInstance(instanceName, zkServer5);
         final Connector conn5 = inst5.getConnector(username, new PasswordToken(password));
 
-        final List<String>overlap = new ArrayList<>();
+        final List<String> overlap = new ArrayList<>();
 
         final Scanner scan1 = conn1.createScanner(tableURI, new Authorizations());
         final Scanner scan31 = conn3.createScanner(tableNewURI31, new Authorizations());
@@ -79,7 +86,7 @@ public class CreateOverlapTest {
             scan1.setRange(Range.exact(key31));
             final Iterator<Entry<Key, Value>> iterator1 = scan1.iterator();
             if (iterator1.hasNext()) {
-                if(key31.contains("http")&& !(key31.contains("org"))) {
+                if (key31.contains("http")&& !(key31.contains("org"))) {
                     overlap.add(key31);
                 }
             }
@@ -96,15 +103,15 @@ public class CreateOverlapTest {
                 }
             }
         }
-        System.out.println("size: " + overlap.size());
+        log.info("size: " + overlap.size());
         final TableOperations ops = conn1.tableOperations();
         if (!ops.exists(tableOverlap)) {
             ops.create(tableOverlap);
         }
-        TestUtils.addURIs(overlap, conn1, tableOverlap);
+        addURIs(overlap, conn1, tableOverlap);
 
         final long end = System.currentTimeMillis();
 
-        System.out.println(end - start);
+        log.info("Execution Time: " + getTimeElapsed(start, end));
     }
 }

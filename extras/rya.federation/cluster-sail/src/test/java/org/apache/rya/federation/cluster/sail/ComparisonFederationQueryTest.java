@@ -20,12 +20,8 @@ package org.apache.rya.federation.cluster.sail;
 
 import static org.apache.rya.federation.cluster.sail.TestUtils.closeConnection;
 import static org.apache.rya.federation.cluster.sail.TestUtils.closeRepository;
+import static org.apache.rya.federation.cluster.sail.TestUtils.performQuery;
 
-import org.openrdf.model.Value;
-import org.openrdf.query.BindingSet;
-import org.openrdf.query.QueryLanguage;
-import org.openrdf.query.TupleQuery;
-import org.openrdf.query.TupleQueryResult;
 import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.http.HTTPRepository;
@@ -95,7 +91,6 @@ public class ComparisonFederationQueryTest {
 //            con1234 = repo1234.getConnection();
             con123456 = repo123456.getConnection();
 
-            final long start = System.currentTimeMillis();
             // Execute query
             final String query =
                 "prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
@@ -109,26 +104,7 @@ public class ComparisonFederationQueryTest {
                 "    ?X ub:undergraduateDegreeFrom ?Y .\n" +
                 "}";
 
-            final TupleQuery tupleQuery = con123456.prepareTupleQuery(QueryLanguage.SPARQL, query);
-
-            final TupleQueryResult result = tupleQuery.evaluate();
-
-            final long end = System.currentTimeMillis();
-
-            log.info("" + (end - start));
-
-            long count = 0;
-
-            BindingSet bindingSet = null;
-
-            while (result.hasNext()) {
-                bindingSet = result.next();
-                final Value valueOfX = bindingSet.getValue("X");
-                log.trace("X: " + valueOfX);
-                count++;
-            }
-
-            log.info("result size: " + count);
+            performQuery(con123456, query);
         } finally {
             closeConnection(con123456);
             closeRepository(repo123456);

@@ -20,18 +20,17 @@ package org.apache.rya.federation.cluster.sail;
 
 import static org.apache.rya.federation.cluster.sail.TestUtils.closeConnection;
 import static org.apache.rya.federation.cluster.sail.TestUtils.closeRepository;
+import static org.apache.rya.federation.cluster.sail.TestUtils.performQuery;
 
-import org.openrdf.model.Value;
-import org.openrdf.query.BindingSet;
-import org.openrdf.query.QueryLanguage;
-import org.openrdf.query.TupleQuery;
-import org.openrdf.query.TupleQueryResult;
 import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.http.HTTPRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Tests federations.
+ */
 public class FederationTest{
     private static final Logger log = LoggerFactory.getLogger(FederationTest.class);
 
@@ -132,7 +131,6 @@ public class FederationTest{
 //
 //            conTest = (SailRepositoryConnection) test.getConnection();
 
-            final long start = System.currentTimeMillis();
 //            // Execute query
 //            final String query =
 //                "PREFIX code:<http://telegraphis.net/ontology/measurement/code#>\n" +
@@ -174,47 +172,7 @@ public class FederationTest{
                 "    ?X ub:takesCourse ?Z.\n" +
                 "}";
 
-            final TupleQuery tupleQuery1234 = con1234.prepareTupleQuery(QueryLanguage.SPARQL, query);
-//            final TupleQuery tupleQuery1234 = clusterCon1234.prepareTupleQuery(QueryLanguage.SPARQL, query);
-
-//            final TupleQueryResult result12 = tupleQuery12.evaluate();
-            final TupleQueryResult result1234 = tupleQuery1234.evaluate();
-//            final TupleQueryResult result1234 = tupleQuery1234.evaluate();
-
-            final long end = System.currentTimeMillis();
-            log.info("Execution time: " + (end - start));
-            BindingSet bindingSet = null;
-            int count = 0;
-
-//            while (result1234.hasNext()) {
-//                bindingSet = result1234.next();
-//                final Value valueOfX = bindingSet.getValue("x");
-//                log.info(valueOfX);
-//            }
-//
-//            while (result12.hasNext()) {
-//                bindingSet = result12.next();
-//                final Value valueOfX = bindingSet.getValue("x");
-//                log.info(valueOfX);
-//            }
-
-            while (result1234.hasNext()) {
-                bindingSet = result1234.next();
-                final Value valueOfX = bindingSet.getValue("X");
-                final Value valueOfY = bindingSet.getValue("Y");
-                final Value valueOfZ = bindingSet.getValue("Z");
-                log.info("x: " + valueOfX + "\ty: " + valueOfY + "\tz: " + valueOfZ);
-                count++;
-            }
-
-            log.info("result size: " + count);
-//            TupleQuery tupleQuery2 = con.prepareTupleQuery(QueryLanguage.SPARQL,
-//                      query2);
-//            tupleQuery2.evaluate(resultHandler2);
-//            log.info("Result count : " + resultHandler2.getCount());
-//            sailRepo1234.shutDown();
-//            sailRepo12.shutDown();
-//            sailRepo34.shutDown();
+            performQuery(con1234, query);
         } finally {
 //            closeConnection(con12);
             closeConnection(con1234);
