@@ -51,7 +51,7 @@ public class LoadDataTimeTest {
         config.setZkServer(zkServer1);
         config.setUsername(username);
         config.setPassword(password);
-        config.setOverlapListDbType(OverlapListDbType.ACCUMULO.toString());
+        config.setOverlapListDbType(OverlapListDbType.ACCUMULO);
 
         final long start = System.currentTimeMillis();
         try (final AccumuloOverlapList ol1 = new AccumuloOverlapList(config)) {

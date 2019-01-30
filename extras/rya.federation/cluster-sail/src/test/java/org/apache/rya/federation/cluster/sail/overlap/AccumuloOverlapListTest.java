@@ -19,7 +19,8 @@
 package org.apache.rya.federation.cluster.sail.overlap;
 
 import java.util.Iterator;
-import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.accumulo.core.client.Scanner;
 import org.apache.accumulo.core.data.Key;
@@ -47,14 +48,14 @@ public class AccumuloOverlapListTest {
         config.setZkServer(zkServer);
         config.setUsername(username);
         config.setPassword(password);
-        config.setOverlapListDbType(OverlapListDbType.ACCUMULO.toString());
+        config.setOverlapListDbType(OverlapListDbType.ACCUMULO);
 
         try (final AccumuloOverlapList overlapList = new AccumuloOverlapList(config)) {
             overlapList.setup();
             final Scanner sc = overlapList.createScanner();
 
             final String course15 = "http://www.Department0.University0.edu/Course15";
-//            final String course16 = "http://www.Department0.University0.edu/Course16";
+            final String course16 = "http://www.Department0.University0.edu/Course16";
 //            final String course17 = "http://www.Department0.University0.edu/GraduateCourse17";
 //            final String course18 = "http://www.Department0.University0.edu/GraduateCourse18";
 
@@ -69,20 +70,26 @@ public class AccumuloOverlapListTest {
             }
 
             overlapList.addData(course15);
-//            overlapList.addData(course16, rowValue);
-//            overlapList.addData(course17, rowValue);
-//            overlapList.addData(course18, rowValue);
+            overlapList.addData(course15);
+            overlapList.addData(course16);
+//            overlapList.addData(course17);
+//            overlapList.addData(course18);
             // Delete data
-//            overlapList.deleteData(rowID, rowValue);
+            overlapList.deleteData(course16);
             // Scan data
-            final Iterator<Map.Entry<Key, Value>> iterator = sc.iterator();
-//           final Set<String> result = new HashSet<>();
+            final Iterator<Entry<Key, Value>> iterator = sc.iterator();
 
             while (iterator.hasNext()) {
-                final Map.Entry<Key, Value> entry = iterator.next();
+                final Entry<Key, Value> entry = iterator.next();
                 final Key key = entry.getKey();
                 final Value value = entry.getValue();
                 log.info(key.getRow() + " ==> " + value.toString());
+            }
+
+            final Set<String> overlaps = overlapList.getOverlaps();
+
+            for (final String overlap : overlaps) {
+                log.info(overlap);
             }
         }
     }

@@ -29,6 +29,11 @@ import org.apache.rya.federation.cluster.sail.exception.OverlapListException;
  */
 public interface OverlapList extends AutoCloseable {
     /**
+     * The default table to store the overlap list.
+     */
+    public static final String DEFAULT_OVERLAP_LIST_TABLE_NAME = "rya_overlap";
+
+    /**
      * Setup the Overlap list for use.
      * @throws OverlapListException
      */

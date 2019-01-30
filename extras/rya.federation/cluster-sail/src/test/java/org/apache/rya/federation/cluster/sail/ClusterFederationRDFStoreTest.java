@@ -60,7 +60,7 @@ public class ClusterFederationRDFStoreTest extends RDFStoreTest {
             config.setZkServer("localhost");
             config.setUsername("");
             config.setPassword("");
-            config.setOverlapListDbType(OverlapListDbType.ACCUMULO.toString());
+            config.setOverlapListDbType(OverlapListDbType.ACCUMULO);
 
             final Federation sail = new ClusterFederation(config);
 //            sail.addMember(new SailRepository(new MemoryStore()));

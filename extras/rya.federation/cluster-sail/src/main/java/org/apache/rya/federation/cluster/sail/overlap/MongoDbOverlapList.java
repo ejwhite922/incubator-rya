@@ -20,14 +20,19 @@ package org.apache.rya.federation.cluster.sail.overlap;
 
 import static java.util.Objects.requireNonNull;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.rya.federation.cluster.sail.OverlapList;
 import org.apache.rya.federation.cluster.sail.config.ClusterFederationConfig;
 import org.apache.rya.federation.cluster.sail.exception.OverlapListException;
 import org.bson.Document;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
@@ -35,12 +40,15 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.IndexOptions;
 
 /**
  * The overlap list is the set of subject or object values URIs at each cluster
  * center that appear as subjects or objects in other clusters too.
  */
 public class MongoDbOverlapList implements OverlapList {
+    private static final Logger log = LoggerFactory.getLogger(MongoDbOverlapList.class);
+
     private static final String KEY = "overlap_list_item";
 
     private final String instanceName;
@@ -65,7 +73,7 @@ public class MongoDbOverlapList implements OverlapList {
         this.config = requireNonNull(config);
 
         this.instanceName = config.getInstanceName();
-        this.collectionName = config.getTableName();
+        this.collectionName = StringUtils.defaultString(config.getTableName(), OverlapList.DEFAULT_OVERLAP_LIST_TABLE_NAME);
         this.hostname = config.getMongoHostname();
         this.port = config.getMongoPort();
         this.username = config.getUsername();
@@ -81,7 +89,29 @@ public class MongoDbOverlapList implements OverlapList {
         requireNonNull(collectionName);
         this.collection = db.getCollection(collectionName);
         this.collectionName = collectionName;
+        createIndex();
     }
+
+    private void createIndex() {
+        final Document index = new Document(KEY, 1);
+        if (!hasIndex(index)) {
+            collection.createIndex(index, new IndexOptions().unique(true));
+        }
+    }
+
+    private boolean hasIndex(final Document index) {
+        boolean hasIndex = false;
+        final List<Document> indexes = collection.listIndexes().into(new ArrayList<>());
+        for (final Document indexDoc : indexes) {
+            final Document keyDoc = indexDoc.get("key", Document.class);
+            if (keyDoc != null && keyDoc.equals(index)) {
+                hasIndex = true;
+                break;
+            }
+        }
+        return hasIndex;
+    }
+
 
     /**
      * Creates the MongoDB client.
@@ -99,7 +129,12 @@ public class MongoDbOverlapList implements OverlapList {
             final Document document = new Document(KEY, value);
             collection.insertOne(document);
         } catch (final MongoException e) {
-            throw new OverlapListException("Failed to add data", e);
+            if (e.getMessage().contains("duplicate key")) {
+                // Absorb duplicate key exception
+                log.trace(e.getMessage());
+            } else {
+                throw new OverlapListException("Failed to add data", e);
+            }
         }
     }
 

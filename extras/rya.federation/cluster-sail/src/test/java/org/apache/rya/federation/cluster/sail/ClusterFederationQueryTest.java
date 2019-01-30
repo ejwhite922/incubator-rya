@@ -83,7 +83,7 @@ public class ClusterFederationQueryTest {
             log.info("Connecting to SailRepository.");
             // Overlap list info
 //            final String instanceName = "dev";
-//            final String tableName = "rya_overlap";
+//            final String tableName = OverlapList.DEFAULT_OVERLAP_LIST_TABLE_NAME;
 //            final String zkServer = "localhost:2181";
 //            final String username = "root";
 //            final String password = "root";

@@ -90,7 +90,7 @@ public class NHopOverlapTest {
         final String instanceName = "dev";
         final String tableSPO = "rya_spo";
 
-        final String tableOverlap = "rya_overlap";
+        final String tableOverlap = OverlapList.DEFAULT_OVERLAP_LIST_TABLE_NAME;
 
         final String zkServer1 = "192.168.33.10:2181";
         final String zkServer2 = "192.168.33.20:2181";

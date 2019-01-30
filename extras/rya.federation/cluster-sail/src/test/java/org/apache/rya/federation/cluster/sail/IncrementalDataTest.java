@@ -90,7 +90,7 @@ public class IncrementalDataTest {
         final String instanceName = "dev";
         final String tableURI = "URI_index";
         final String tableNewURI = "new_URI_index";
-        final String tableOverlap ="rya_overlap";
+        final String tableOverlap = OverlapList.DEFAULT_OVERLAP_LIST_TABLE_NAME;
 
         final String zkServer1 = "192.168.33.10:2181";
         final String zkServer3 = "192.168.33.30:2181";

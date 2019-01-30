@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.rya.api.RdfCloudTripleStoreConfiguration;
+import org.apache.rya.federation.cluster.sail.overlap.OverlapListDbType;
 import org.apache.rya.rdftriplestore.RyaSailRepository;
 import org.openrdf.model.Graph;
 import org.openrdf.model.Literal;
@@ -131,7 +132,7 @@ public class ClusterFederationConfig extends SailImplConfigBase {
 
     private String password;
 
-    private String overlapListDbType;
+    private OverlapListDbType overlapListDbType;
 
     private String mongoHostname;
 
@@ -260,14 +261,14 @@ public class ClusterFederationConfig extends SailImplConfigBase {
     /**
      * @return the overlap list database type.
      */
-    public String getOverlapListDbType() {
+    public OverlapListDbType getOverlapListDbType() {
         return overlapListDbType;
     }
 
     /**
      * @param overlapListDbType the overlap list database type. (not null)
      */
-    public void setOverlapListDbType(final String overlapListDbType) {
+    public void setOverlapListDbType(final OverlapListDbType overlapListDbType) {
         this.overlapListDbType = requireNonNull(overlapListDbType);
     }
 
@@ -316,7 +317,7 @@ public class ClusterFederationConfig extends SailImplConfigBase {
         model.add(self, ZK_SERVER, valueFactory.createLiteral(zkServer));
         model.add(self, USERNAME, valueFactory.createLiteral(username));
         model.add(self, PASSWORD, valueFactory.createLiteral(password));
-        model.add(self, OVERLAP_LIST_DB_TYPE, valueFactory.createLiteral(overlapListDbType));
+        model.add(self, OVERLAP_LIST_DB_TYPE, valueFactory.createLiteral(overlapListDbType.toString()));
         model.add(self, MONGO_HOSTNAME, valueFactory.createLiteral(mongoHostname));
         model.add(self, MONGO_PORT, valueFactory.createLiteral(mongoPort));
         return self;
@@ -376,7 +377,7 @@ public class ClusterFederationConfig extends SailImplConfigBase {
             final Literal overlapListDbType = model.filter(implNode, OVERLAP_LIST_DB_TYPE, null)
                     .objectLiteral();
             if (overlapListDbType != null) {
-                this.overlapListDbType = overlapListDbType.stringValue();
+                this.overlapListDbType = OverlapListDbType.fromName(overlapListDbType.stringValue());
             }
             final Literal mongoHostname = model.filter(implNode, MONGO_HOSTNAME, null)
                     .objectLiteral();

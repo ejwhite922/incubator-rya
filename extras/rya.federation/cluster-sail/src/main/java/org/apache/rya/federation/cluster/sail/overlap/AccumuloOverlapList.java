@@ -47,6 +47,7 @@ import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Mutation;
 import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.security.Authorizations;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.io.Text;
 import org.apache.rya.federation.cluster.sail.OverlapList;
 import org.apache.rya.federation.cluster.sail.config.ClusterFederationConfig;
@@ -81,7 +82,7 @@ public class AccumuloOverlapList implements OverlapList {
         this.config = requireNonNull(config);
 
         this.instanceName = config.getInstanceName();
-        this.tableName = config.getTableName();
+        this.tableName = StringUtils.defaultString(config.getTableName(), OverlapList.DEFAULT_OVERLAP_LIST_TABLE_NAME);
         this.zkServer = config.getZkServer();
         this.username = config.getUsername();
         this.password = config.getPassword();

@@ -50,7 +50,7 @@ public class CreateOverlapTest {
         final String tableURI = "URI_index";
         final String tableNewURI31 = "new_URI_index_31";
         final String tableNewURI51 = "new_URI_index_51";
-        final String tableOverlap = "rya_overlap";
+        final String tableOverlap = OverlapList.DEFAULT_OVERLAP_LIST_TABLE_NAME;
 
         final String zkServer1 = "192.168.33.10:2181";
         final String zkServer3 = "192.168.33.30:2181";

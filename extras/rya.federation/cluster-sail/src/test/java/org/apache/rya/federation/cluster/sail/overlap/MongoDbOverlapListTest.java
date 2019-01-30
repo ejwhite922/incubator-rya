@@ -45,13 +45,13 @@ public class MongoDbOverlapListTest {
         config.setPassword(password);
         config.setMongoHostname(hostname);
         config.setMongoPort(port);
-        config.setOverlapListDbType(OverlapListDbType.MONGO_DB.toString());
+        config.setOverlapListDbType(OverlapListDbType.MONGO_DB);
 
         try (final MongoDbOverlapList overlapList = new MongoDbOverlapList(config)) {
             overlapList.setup();
 
             final String course15 = "http://www.Department0.University0.edu/Course15";
-//            final String course16 = "http://www.Department0.University0.edu/Course16";
+            final String course16 = "http://www.Department0.University0.edu/Course16";
 //            final String course17 = "http://www.Department0.University0.edu/GraduateCourse17";
 //            final String course18 = "http://www.Department0.University0.edu/GraduateCourse18";
 
@@ -66,11 +66,12 @@ public class MongoDbOverlapListTest {
             }
 
             overlapList.addData(course15);
-//            overlapList.addData(course16);
+            overlapList.addData(course15);
+            overlapList.addData(course16);
 //            overlapList.addData(course17);
 //            overlapList.addData(course18);
-//            // Delete data
-            overlapList.deleteData(course15);
+            // Delete data
+            overlapList.deleteData(course16);
 
             final Set<String> overlaps = overlapList.getOverlaps();
 

@@ -38,7 +38,7 @@ public class OverlapListQuery2 {
 
     public static void main(final String[] args) throws Exception {
         final String instanceName = "dev";
-        final String tableName = "rya_overlap";
+        final String tableName = OverlapList.DEFAULT_OVERLAP_LIST_TABLE_NAME;
         final String zkServer = "localhost:2181";
         final String username = "root";
         final String password = "root";
@@ -49,7 +49,7 @@ public class OverlapListQuery2 {
         config.setZkServer(zkServer);
         config.setUsername(username);
         config.setPassword(password);
-        config.setOverlapListDbType(OverlapListDbType.ACCUMULO.toString());
+        config.setOverlapListDbType(OverlapListDbType.ACCUMULO);
 
         try (final AccumuloOverlapList overlapList = new AccumuloOverlapList(config)) {
             overlapList.setup();
