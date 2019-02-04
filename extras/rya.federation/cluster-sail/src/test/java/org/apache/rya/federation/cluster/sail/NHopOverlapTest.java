@@ -50,12 +50,11 @@ public class NHopOverlapTest {
         final Scanner scanSPO1 = conn1.createScanner(tableSPO, new Authorizations());
         final Scanner scanSPO2 = conn2.createScanner(tableSPO, new Authorizations());
 
-        String key = null;
         final Iterator<Entry<Key, Value>> iteratorSPO1 = scanSPO1.iterator();
         while (iteratorSPO1.hasNext()) {
             final Entry<Key, Value> entry = iteratorSPO1.next();
-            key = entry.getKey().getRow().toString();
-            final String [] pattern = key.split("\\x00");
+            final String key = entry.getKey().getRow().toString();
+            final String[] pattern = key.split("\\x00");
             final String subject = pattern[0];
             String object = pattern[2].replaceAll("\\x01\\x02", "");
             object = object.replaceAll("\\x01\\x03", "");
@@ -70,8 +69,8 @@ public class NHopOverlapTest {
         final Iterator<Entry<Key, Value>> iteratorSPO2 = scanSPO2.iterator();
         while (iteratorSPO2.hasNext()) {
             final Entry<Key, Value> entry = iteratorSPO2.next();
-            key = entry.getKey().getRow().toString();
-            final String [] pattern = key.split("\\x00");
+            final String key = entry.getKey().getRow().toString();
+            final String[] pattern = key.split("\\x00");
             final String subject = pattern[0];
             String object = pattern[2].replaceAll("\\x01\\x02", "");
             object = object.replaceAll("\\x01\\x03", "");
@@ -85,6 +84,8 @@ public class NHopOverlapTest {
     }
 
     public static void main(final String[] args) throws Exception {
+        log.info("Starting " + NHopOverlapTest.class.getSimpleName() + "...");
+
         final int N = 1;
 
         final String instanceName = "dev";
@@ -113,12 +114,10 @@ public class NHopOverlapTest {
         final Connector conn2 = inst2.getConnector(username, new PasswordToken(password));
         final Scanner scanSPO2 = conn2.createScanner(tableSPO, new Authorizations());
 
-        String key = null;
-
         final Iterator<Entry<Key, Value>> iteratorOverlap = scanOverlap.iterator();
         while (iteratorOverlap.hasNext()) {
             final Entry<Key, Value> entry = iteratorOverlap.next();
-            key = entry.getKey().getRow().toString();
+            final String key = entry.getKey().getRow().toString();
             overlap.add(key);
         }
 
@@ -130,8 +129,8 @@ public class NHopOverlapTest {
         final Iterator<Entry<Key, Value>> iteratorSPO1 = scanSPO1.iterator();
         while (iteratorSPO1.hasNext()) {
             final Entry<Key, Value> entry = iteratorSPO1.next();
-            key = entry.getKey().getRow().toString();
-            final String [] pattern = key.split("\\x00");
+            final String key = entry.getKey().getRow().toString();
+            final String[] pattern = key.split("\\x00");
             final String subject = pattern[0];
             String object = pattern[2].replaceAll("\\x01\\x02", "");
             object = object.replaceAll("\\x01\\x03", "");
@@ -147,8 +146,8 @@ public class NHopOverlapTest {
         final Iterator<Entry<Key, Value>> iteratorSPO2 = scanSPO2.iterator();
         while (iteratorSPO2.hasNext()) {
             final Entry<Key, Value> entry = iteratorSPO2.next();
-            key = entry.getKey().getRow().toString();
-            final String [] pattern = key.split("\\x00");
+            final String key = entry.getKey().getRow().toString();
+            final String[] pattern = key.split("\\x00");
             final String subject = pattern[0];
             String object = pattern[2].replaceAll("\\x01\\x02", "");
             object = object.replaceAll("\\x01\\x03", "");
@@ -179,5 +178,6 @@ public class NHopOverlapTest {
         final long end = System.currentTimeMillis();
 
         log.info("Execution Time: " + getTimeElapsed(start, end));
+        log.info("Finished " + NHopOverlapTest.class.getSimpleName());
     }
 }

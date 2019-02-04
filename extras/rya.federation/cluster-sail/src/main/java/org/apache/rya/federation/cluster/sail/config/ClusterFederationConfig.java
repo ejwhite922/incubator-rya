@@ -26,7 +26,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.rya.api.RdfCloudTripleStoreConfiguration;
 import org.apache.rya.federation.cluster.sail.overlap.OverlapListDbType;
 import org.apache.rya.rdftriplestore.RyaSailRepository;
 import org.openrdf.model.Graph;
@@ -120,8 +119,6 @@ public class ClusterFederationConfig extends SailImplConfigBase {
 
     private boolean readOnly;
 
-    private RdfCloudTripleStoreConfiguration rdfCloudTripleStoreConfiguration;
-
     private String instanceName;
 
     private String tableName;
@@ -172,20 +169,6 @@ public class ClusterFederationConfig extends SailImplConfigBase {
 
     public void setReadOnly(final boolean readOnly) {
         this.readOnly = readOnly;
-    }
-
-    /**
-     * @return the {@link RdfCloudTripleStoreConfiguration}.
-     */
-    public RdfCloudTripleStoreConfiguration getRdfCloudTripleStoreConfiguration() {
-        return rdfCloudTripleStoreConfiguration;
-    }
-
-    /**
-     * @param rdfCloudTripleStoreConfiguration the {@link RdfCloudTripleStoreConfiguration}. (not null)
-     */
-    public void setRdfCloudTripleStoreConfiguration(final RdfCloudTripleStoreConfiguration rdfCloudTripleStoreConfiguration) {
-        this.rdfCloudTripleStoreConfiguration = requireNonNull(rdfCloudTripleStoreConfiguration);
     }
 
     /**

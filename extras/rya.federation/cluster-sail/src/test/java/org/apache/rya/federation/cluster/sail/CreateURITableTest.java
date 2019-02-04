@@ -44,7 +44,22 @@ import org.slf4j.LoggerFactory;
 public class CreateURITableTest {
     private static final Logger log = LoggerFactory.getLogger(CreateURITableTest.class);
 
+    private static Set<String> scan(final Scanner scanner) {
+        final Set<String> list = new HashSet<>();
+
+        final Iterator<Entry<Key, Value>> iterator = scanner.iterator();
+        while (iterator.hasNext()) {
+            final Entry<Key, Value> entry = iterator.next();
+            final String[] pattern = entry.getKey().getRow().toString().split("\\x00");
+            list.add(pattern[0]);
+        }
+
+        return list;
+    }
+
     public static void main(final String[] args) throws Exception {
+        log.info("Starting " + CreateURITableTest.class.getSimpleName() + "...");
+
         final String instanceName = "dev";
         final String tableURI = "URI_index";
         final String tableSPO = "rya_spo";
@@ -65,41 +80,17 @@ public class CreateURITableTest {
         final Instance inst2 = new ZooKeeperInstance(instanceName, zkServer2);
         final Connector conn2 = inst2.getConnector(username, new PasswordToken(password));
 
-        final Scanner scan2SPO = conn2.createScanner(tableSPO, new Authorizations());
-        final Scanner scan2OSP = conn2.createScanner(tableOSP, new Authorizations());
         final Scanner scan1SPO = conn1.createScanner(tableSPO, new Authorizations());
         final Scanner scan1OSP = conn1.createScanner(tableOSP, new Authorizations());
-
-        final Iterator<Entry<Key, Value>> iterator1SPO = scan1SPO.iterator();
-        final Iterator<Entry<Key, Value>> iterator1OSP = scan1OSP.iterator();
-        final Iterator<Entry<Key, Value>> iterator2SPO = scan2SPO.iterator();
-        final Iterator<Entry<Key, Value>> iterator2OSP = scan2OSP.iterator();
+        final Scanner scan2SPO = conn2.createScanner(tableSPO, new Authorizations());
+        final Scanner scan2OSP = conn2.createScanner(tableOSP, new Authorizations());
 
         final long start = System.currentTimeMillis();
 
-        while (iterator1SPO.hasNext()) {
-            final Entry<Key, org.apache.accumulo.core.data.Value> entry = iterator1SPO.next();
-            final String [] pattern = entry.getKey().getRow().toString().split("\\x00");
-            list.add(pattern[0]);
-        }
-
-        while (iterator1OSP.hasNext()) {
-            final Entry<Key, org.apache.accumulo.core.data.Value> entry = iterator1OSP.next();
-            final String [] pattern = entry.getKey().getRow().toString().split("\\x00");
-            list.add(pattern[0]);
-        }
-
-        while (iterator2SPO.hasNext()) {
-            final Entry<Key, org.apache.accumulo.core.data.Value> entry = iterator2SPO.next();
-            final String [] pattern = entry.getKey().getRow().toString().split("\\x00");
-            list.add(pattern[0]);
-        }
-
-        while (iterator2OSP.hasNext()) {
-            final Entry<Key, org.apache.accumulo.core.data.Value> entry = iterator2OSP.next();
-            final String [] pattern = entry.getKey().getRow().toString().split("\\x00");
-            list.add(pattern[0]);
-        }
+        list.addAll(scan(scan1SPO));
+        list.addAll(scan(scan1OSP));
+        list.addAll(scan(scan2SPO));
+        list.addAll(scan(scan2OSP));
 
         final TableOperations ops = conn1.tableOperations();
         if (!ops.exists(tableURI)) {
@@ -111,5 +102,6 @@ public class CreateURITableTest {
         final long end = System.currentTimeMillis();
 
         log.info("Execution Time: " + getTimeElapsed(start, end));
+        log.info("Finished " + CreateURITableTest.class.getSimpleName());
     }
 }

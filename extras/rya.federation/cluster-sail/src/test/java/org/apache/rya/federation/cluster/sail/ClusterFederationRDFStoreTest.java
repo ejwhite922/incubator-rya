@@ -56,16 +56,13 @@ public class ClusterFederationRDFStoreTest extends RDFStoreTest {
         try {
             final ClusterFederationConfig config = new ClusterFederationConfig();
             config.setInstanceName("dev");
-            config.setTableName("rya_spo");
+            config.setTableName(OverlapList.DEFAULT_OVERLAP_LIST_TABLE_NAME);
             config.setZkServer("localhost");
             config.setUsername("");
             config.setPassword("");
             config.setOverlapListDbType(OverlapListDbType.ACCUMULO);
 
             final Federation sail = new ClusterFederation(config);
-//            sail.addMember(new SailRepository(new MemoryStore()));
-//            sail.addMember(new SailRepository(new MemoryStore()));
-//            sail.addMember(new SailRepository(new MemoryStore()));
             sail.addMember(createRyaSailRepository());
             sail.addMember(createRyaSailRepository());
             sail.addMember(createRyaSailRepository());

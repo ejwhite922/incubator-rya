@@ -46,6 +46,8 @@ public class CreateBloomFilterTest {
     private static final Logger log = LoggerFactory.getLogger(CreateBloomFilterTest.class);
 
     public static void main(final String[] args) throws Exception {
+        log.info("Starting " + CreateBloomFilterTest.class.getSimpleName() + "...");
+
         final int vectorSize = 100000;
         final int nbHash = 500;
         final int hashType = Hash.MURMUR_HASH;
@@ -83,5 +85,6 @@ public class CreateBloomFilterTest {
         final long end = System.currentTimeMillis();
 
         log.info("Execution Time: " + getTimeElapsed(start, end));
+        log.info("Finished " + CreateBloomFilterTest.class.getSimpleName());
     }
 }

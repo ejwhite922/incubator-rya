@@ -23,6 +23,8 @@ import static java.util.Objects.requireNonNull;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
+import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.accumulo.core.client.AccumuloException;
@@ -30,11 +32,14 @@ import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.BatchWriter;
 import org.apache.accumulo.core.client.BatchWriterConfig;
 import org.apache.accumulo.core.client.Connector;
+import org.apache.accumulo.core.client.Scanner;
 import org.apache.accumulo.core.client.TableNotFoundException;
+import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Mutation;
 import org.apache.accumulo.core.data.Value;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.hadoop.io.Text;
+import org.apache.rya.federation.cluster.sail.overlap.AccumuloOverlapList;
 import org.openrdf.query.MalformedQueryException;
 import org.openrdf.query.QueryEvaluationException;
 import org.openrdf.query.QueryLanguage;
@@ -197,6 +202,29 @@ public final class TestUtils {
                 repo.shutDown();
             } catch (final RepositoryException e) {
                 log.error("Error shutting down Repository", e);
+            }
+        }
+    }
+
+    /**
+     * Prints out the {@link OverlapList}'s inner iterator using a
+     * {@link Scanner} if it's an Accumulo based overlap list..
+     * @param overlapList the {@link OverlapList}. (not null)
+     * @throws TableNotFoundException
+     * @throws AccumuloException
+     * @throws AccumuloSecurityException
+     */
+    public static void printOverlapScanner(final OverlapList overlapList) throws TableNotFoundException, AccumuloException, AccumuloSecurityException {
+        requireNonNull(overlapList);
+        if (overlapList instanceof AccumuloOverlapList) {
+            final Scanner scanner = ((AccumuloOverlapList) overlapList).createScanner();
+            final Iterator<Entry<Key, Value>> iterator = scanner.iterator();
+
+            while (iterator.hasNext()) {
+                final Entry<Key, Value> entry = iterator.next();
+                final Key key = entry.getKey();
+                final Value value = entry.getValue();
+                log.info(key.getRow() + " ==> " + value.toString());
             }
         }
     }

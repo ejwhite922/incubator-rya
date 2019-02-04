@@ -165,5 +165,7 @@ public class ClusterFederationQueryTest {
             closeRepository(repo56);
             closeRepository(repo12_34_56);
         }
+
+        log.info("Finished " + ClusterFederationQueryTest.class.getSimpleName());
     }
 }

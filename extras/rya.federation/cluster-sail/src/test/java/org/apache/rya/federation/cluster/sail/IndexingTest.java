@@ -78,5 +78,7 @@ public class IndexingTest {
             closeConnection(con);
             closeRepository(repo);
         }
+
+        log.info("Finished " + IndexingTest.class.getSimpleName());
     }
 }

@@ -77,6 +77,8 @@ public class IncrementalDataTest {
     }
 
     public static void main(final String[] args) throws Exception {
+        log.info("Starting " + IncrementalDataTest.class.getSimpleName() + "...");
+
         final List<String> triples = new ArrayList<>();
         for (int i = 12; i < 13; i++) {
             for (int j = 270; j < 271; j++) {
@@ -138,5 +140,7 @@ public class IncrementalDataTest {
         } catch (final TableNotFoundException e) {
             log.error("Table not found", e);
         }
+
+        log.info("Finished " + IncrementalDataTest.class.getSimpleName());
     }
 }

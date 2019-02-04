@@ -18,12 +18,8 @@
  */
 package org.apache.rya.federation.cluster.sail;
 
-import java.util.Iterator;
-import java.util.Map.Entry;
+import java.util.Set;
 
-import org.apache.accumulo.core.client.Scanner;
-import org.apache.accumulo.core.data.Key;
-import org.apache.accumulo.core.data.Value;
 import org.apache.rya.federation.cluster.sail.config.ClusterFederationConfig;
 import org.apache.rya.federation.cluster.sail.overlap.AccumuloOverlapList;
 import org.apache.rya.federation.cluster.sail.overlap.OverlapListDbType;
@@ -37,6 +33,8 @@ public class OverlapListQuery2 {
     private static final Logger log = LoggerFactory.getLogger(OverlapListQuery2.class);
 
     public static void main(final String[] args) throws Exception {
+        log.info("Starting " + OverlapListQuery2.class.getSimpleName() + "...");
+
         final String instanceName = "dev";
         final String tableName = OverlapList.DEFAULT_OVERLAP_LIST_TABLE_NAME;
         final String zkServer = "localhost:2181";
@@ -53,16 +51,11 @@ public class OverlapListQuery2 {
 
         try (final AccumuloOverlapList overlapList = new AccumuloOverlapList(config)) {
             overlapList.setup();
-            final Scanner sc = overlapList.createScanner();
 
             final int numDept = 10;
             final String univ0 = "http://www.University0.edu";
-//            final  String univ2 = "http://www.University2.edu";
-//            final String predicate = "type";
             final int studentID = 100;
-//            final String rowID = "http://www.Department0.University0.edu/GraduateStudent19";
-//            final String rowValue = "2";
-//            final ColumnVisibility colVis = new ColumnVisibility("public");
+            final String rowID = "http://www.Department0.University0.edu/GraduateStudent19";
 
             // Insert data
             for (int i = 0; i < numDept; i++) {
@@ -75,17 +68,18 @@ public class OverlapListQuery2 {
             overlapList.addData(univ0);
 
             // Delete data
-//            overlapList.deleteData(rowID, rowValue);
-            // Scan data
-            final Iterator<Entry<Key, Value>> iterator = sc.iterator();
-//            final Set<String> result = new HashSet<>();
+            overlapList.deleteData(rowID);
 
-            while (iterator.hasNext()) {
-                final Entry<Key, Value> entry = iterator.next();
-                final Key key = entry.getKey();
-                final Value value = entry.getValue();
-                log.info(key.getRow()+ " ==> " + value.toString());
+            // Scan data
+            TestUtils.printOverlapScanner(overlapList);
+
+            final Set<String> overlaps = overlapList.getOverlaps();
+
+            for (final String overlap : overlaps) {
+                log.info(overlap);
             }
+
+            log.info("Finished " + OverlapListQuery2.class.getSimpleName());
         }
     }
 }

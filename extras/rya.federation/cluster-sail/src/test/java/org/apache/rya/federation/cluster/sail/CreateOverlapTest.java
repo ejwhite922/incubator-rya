@@ -46,6 +46,8 @@ public class CreateOverlapTest {
     private static final Logger log = LoggerFactory.getLogger(CreateOverlapTest.class);
 
     public static void main(final String[] args) throws Exception {
+        log.info("Starting " + CreateNewURIIndexTest.class.getSimpleName() + "...");
+
         final String instanceName = "dev";
         final String tableURI = "URI_index";
         final String tableNewURI31 = "new_URI_index_31";
@@ -113,5 +115,6 @@ public class CreateOverlapTest {
         final long end = System.currentTimeMillis();
 
         log.info("Execution Time: " + getTimeElapsed(start, end));
+        log.info("Finished " + CreateOverlapTest.class.getSimpleName());
     }
 }

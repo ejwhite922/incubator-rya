@@ -31,6 +31,8 @@ public class MongoDbOverlapListTest {
     private static final Logger log = LoggerFactory.getLogger(MongoDbOverlapListTest.class);
 
     public static void main(final String[] args) throws Exception {
+        log.info("Starting " + MongoDbOverlapListTest.class.getSimpleName() + "...");
+
         final String instanceName = "dev";
         final String tableName = "rya_spo";
         final String username = "root";
@@ -52,13 +54,8 @@ public class MongoDbOverlapListTest {
 
             final String course15 = "http://www.Department0.University0.edu/Course15";
             final String course16 = "http://www.Department0.University0.edu/Course16";
-//            final String course17 = "http://www.Department0.University0.edu/GraduateCourse17";
-//            final String course18 = "http://www.Department0.University0.edu/GraduateCourse18";
 
             final int studentID = 50;
-//            final String rowID = "http://www.Department0.University0.edu/GraduateStudent19";
-
-//            final ColumnVisibility colVis = new ColumnVisibility("public");
 
             // Insert data
             for (int i = 0; i < studentID; i++) {
@@ -68,8 +65,7 @@ public class MongoDbOverlapListTest {
             overlapList.addData(course15);
             overlapList.addData(course15);
             overlapList.addData(course16);
-//            overlapList.addData(course17);
-//            overlapList.addData(course18);
+
             // Delete data
             overlapList.deleteData(course16);
 
@@ -79,5 +75,7 @@ public class MongoDbOverlapListTest {
                 log.info(overlap);
             }
         }
+
+        log.info("Finished " + MongoDbOverlapListTest.class.getSimpleName());
     }
 }

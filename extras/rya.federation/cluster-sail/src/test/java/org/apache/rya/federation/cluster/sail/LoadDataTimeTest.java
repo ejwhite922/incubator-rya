@@ -20,12 +20,6 @@ package org.apache.rya.federation.cluster.sail;
 
 import static org.apache.rya.federation.cluster.sail.TestUtils.getTimeElapsed;
 
-import java.util.Iterator;
-import java.util.Map.Entry;
-
-import org.apache.accumulo.core.client.Scanner;
-import org.apache.accumulo.core.data.Key;
-import org.apache.accumulo.core.data.Value;
 import org.apache.rya.federation.cluster.sail.config.ClusterFederationConfig;
 import org.apache.rya.federation.cluster.sail.overlap.AccumuloOverlapList;
 import org.apache.rya.federation.cluster.sail.overlap.OverlapListDbType;
@@ -39,6 +33,8 @@ public class LoadDataTimeTest {
     private static final Logger log = LoggerFactory.getLogger(LoadDataTimeTest.class);
 
     public static void main(final String[] args) throws Exception {
+        log.info("Starting " + LoadDataTimeTest.class.getSimpleName() + "...");
+
         final String instanceName = "dev";
         final String tableURI = "URI_index";
         final String zkServer1 = "192.168.33.50:2181";
@@ -54,19 +50,16 @@ public class LoadDataTimeTest {
         config.setOverlapListDbType(OverlapListDbType.ACCUMULO);
 
         final long start = System.currentTimeMillis();
-        try (final AccumuloOverlapList ol1 = new AccumuloOverlapList(config)) {
+        try (final OverlapList ol1 = new AccumuloOverlapList(config)) {
             ol1.setup();
 
-            final Scanner sc1 = ol1.createScanner();
-            final Iterator<Entry<Key, Value>> iterator1 = sc1.iterator();
-            long count = 0;
-            while (iterator1.hasNext()) {
-                count++;
-                iterator1.next();
-            }
+            final int count = ol1.getOverlaps().size();
+
             log.info("Result count: " + count);
             final long end = System.currentTimeMillis();
             log.info("Execution Time: " + getTimeElapsed(start, end));
         }
+
+        log.info("Finished " + LoadDataTimeTest.class.getSimpleName());
     }
 }

@@ -152,5 +152,7 @@ public class ClusterFederationTest {
             closeConnection(con12_34);
             closeRepository(sailRepo1234);
         }
+
+        log.info("Finished " + ClusterFederationTest.class.getSimpleName());
     }
 }

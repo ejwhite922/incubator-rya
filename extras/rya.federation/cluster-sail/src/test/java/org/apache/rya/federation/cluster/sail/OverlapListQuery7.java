@@ -18,12 +18,8 @@
  */
 package org.apache.rya.federation.cluster.sail;
 
-import java.util.Iterator;
-import java.util.Map.Entry;
+import java.util.Set;
 
-import org.apache.accumulo.core.client.Scanner;
-import org.apache.accumulo.core.data.Key;
-import org.apache.accumulo.core.data.Value;
 import org.apache.rya.federation.cluster.sail.config.ClusterFederationConfig;
 import org.apache.rya.federation.cluster.sail.overlap.AccumuloOverlapList;
 import org.apache.rya.federation.cluster.sail.overlap.OverlapListDbType;
@@ -37,6 +33,8 @@ public class OverlapListQuery7 {
     private static final Logger log = LoggerFactory.getLogger(OverlapListQuery7.class);
 
     public static void main(final String[] args) throws Exception {
+        log.info("Starting " + OverlapListQuery7.class.getSimpleName() + "...");
+
         final String instanceName = "dev";
         final String tableName = OverlapList.DEFAULT_OVERLAP_LIST_TABLE_NAME;
         final String zkServer = "localhost:2181";
@@ -53,7 +51,6 @@ public class OverlapListQuery7 {
 
         try (final AccumuloOverlapList overlapList = new AccumuloOverlapList(config)) {
             overlapList.setup();
-            final Scanner sc = overlapList.createScanner();
 
             final int numDept = 5;
             final int numUnderStudent = 20;
@@ -61,7 +58,6 @@ public class OverlapListQuery7 {
             final String univ0 = "University0.edu";
             final String univ4 = "University4.edu";
             final String univ2 = "University2.edu";
-//            final String univ5 = "University5.edu";
             final String univ3 = "University3.edu";
             final String univ1 = "University1.edu";
             final String dept0 = "Department0";
@@ -155,9 +151,6 @@ public class OverlapListQuery7 {
             final String studentIDU437 = "93";
             final String studentIDU438 = "109";
 
-
-//            final String rowValue = "2";
-
             // Insert data
 
             //query2
@@ -167,10 +160,10 @@ public class OverlapListQuery7 {
             overlapList.addData("http://www." + dept0 + "." + univ4);
 
             for (int i = 0; i < 15; i++) {
-                overlapList.addData("http://www." + dept0 + "." + univ4 + "/"+"GraduateStudent" + i);
+                overlapList.addData("http://www." + dept0 + "." + univ4 + "/" + "GraduateStudent" + i);
             }
             for (int i = 0; i < 15; i++) {
-                overlapList.addData("http://www." + dept0 + "." + univ0 + "/"+"GraduateStudent" + i);
+                overlapList.addData("http://www." + dept0 + "." + univ0 + "/" + "GraduateStudent" + i);
             }
             //query4
             overlapList.addData("http://www." + dept0 + "." + univ0 + "/" + professor0);
@@ -290,18 +283,21 @@ public class OverlapListQuery7 {
             overlapList.addData("http://www." + dept3 + "." + univ4 + "/" + "GraduateStudent" + studentIDU437);
             overlapList.addData("http://www." + dept3 + "." + univ4 + "/" + "GraduateStudent" + studentIDU438);
 
-            // Delete data
-//            overlapList.deleteData(rowID);
-            // Scan data
-            final Iterator<Entry<Key, Value>> iterator = sc.iterator();
-//            final Set<String> result = new HashSet<>();
+            final String rowID = "http://www.Department0.University0.edu/GraduateStudent19";
 
-            while (iterator.hasNext()) {
-                final Entry<Key, Value> entry = iterator.next();
-                final Key key = entry.getKey();
-                final Value value = entry.getValue();
-                log.info(key.getRow()+ " ==> " + value.toString());
+            // Delete data
+            overlapList.deleteData(rowID);
+
+            // Scan data
+            TestUtils.printOverlapScanner(overlapList);
+
+            final Set<String> overlaps = overlapList.getOverlaps();
+
+            for (final String overlap : overlaps) {
+                log.info(overlap);
             }
         }
+
+        log.info("Finished " + OverlapListQuery7.class.getSimpleName());
     }
 }

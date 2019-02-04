@@ -50,6 +50,8 @@ public class CreateNewURIIndexTest {
     private static final Logger log = LoggerFactory.getLogger(CreateNewURIIndexTest.class);
 
     public static void main(final String[] args) throws Exception {
+        log.info("Starting " + CreateNewURIIndexTest.class.getSimpleName() + "...");
+
         final String url13 = "smb://192.168.33.30/share/3";
         final SmbFile file13 = new SmbFile(url13);
 
@@ -118,5 +120,6 @@ public class CreateNewURIIndexTest {
         final long end = System.currentTimeMillis();
 
         log.info("Phase 2 Execution Time: " + getTimeElapsed(phase2, end));
+        log.info("Finished " + CreateNewURIIndexTest.class.getSimpleName());
     }
 }

@@ -181,5 +181,7 @@ public class FederationTest{
 //            closeRepository(repo3);
 //            closeRepository(repo4);
         }
+
+        log.info("Finished " + FederationTest.class.getSimpleName());
     }
 }

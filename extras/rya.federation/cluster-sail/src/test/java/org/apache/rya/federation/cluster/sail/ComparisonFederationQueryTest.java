@@ -109,5 +109,7 @@ public class ComparisonFederationQueryTest {
             closeConnection(con123456);
             closeRepository(repo123456);
         }
+
+        log.info("Finished " + ComparisonFederationQueryTest.class.getSimpleName());
     }
 }

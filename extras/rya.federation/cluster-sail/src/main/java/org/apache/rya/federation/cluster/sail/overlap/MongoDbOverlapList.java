@@ -34,6 +34,7 @@ import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.mongodb.ErrorCategory;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
 import com.mongodb.client.FindIterable;
@@ -129,7 +130,7 @@ public class MongoDbOverlapList implements OverlapList {
             final Document document = new Document(KEY, value);
             collection.insertOne(document);
         } catch (final MongoException e) {
-            if (e.getMessage().contains("duplicate key")) {
+            if (ErrorCategory.fromErrorCode(e.getCode()) == ErrorCategory.DUPLICATE_KEY) {
                 // Absorb duplicate key exception
                 log.trace(e.getMessage());
             } else {

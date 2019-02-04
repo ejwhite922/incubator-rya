@@ -18,13 +18,9 @@
  */
 package org.apache.rya.federation.cluster.sail.overlap;
 
-import java.util.Iterator;
-import java.util.Map.Entry;
 import java.util.Set;
 
-import org.apache.accumulo.core.client.Scanner;
-import org.apache.accumulo.core.data.Key;
-import org.apache.accumulo.core.data.Value;
+import org.apache.rya.federation.cluster.sail.TestUtils;
 import org.apache.rya.federation.cluster.sail.config.ClusterFederationConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +32,8 @@ public class AccumuloOverlapListTest {
     private static final Logger log = LoggerFactory.getLogger(AccumuloOverlapListTest.class);
 
     public static void main(final String[] args) throws Exception {
+        log.info("Starting " + AccumuloOverlapListTest.class.getSimpleName() + "...");
+
         final String instanceName = "dev";
         final String tableName = "rya_spo";
         final String zkServer = "192.168.33.50:2181";
@@ -52,17 +50,11 @@ public class AccumuloOverlapListTest {
 
         try (final AccumuloOverlapList overlapList = new AccumuloOverlapList(config)) {
             overlapList.setup();
-            final Scanner sc = overlapList.createScanner();
 
             final String course15 = "http://www.Department0.University0.edu/Course15";
             final String course16 = "http://www.Department0.University0.edu/Course16";
-//            final String course17 = "http://www.Department0.University0.edu/GraduateCourse17";
-//            final String course18 = "http://www.Department0.University0.edu/GraduateCourse18";
 
             final int studentID = 50;
-//            final String rowID = "http://www.Department0.University0.edu/GraduateStudent19";
-
-//            final ColumnVisibility colVis = new ColumnVisibility("public");
 
             // Insert data
             for (int i = 0; i < studentID; i++) {
@@ -72,19 +64,12 @@ public class AccumuloOverlapListTest {
             overlapList.addData(course15);
             overlapList.addData(course15);
             overlapList.addData(course16);
-//            overlapList.addData(course17);
-//            overlapList.addData(course18);
+
             // Delete data
             overlapList.deleteData(course16);
-            // Scan data
-            final Iterator<Entry<Key, Value>> iterator = sc.iterator();
 
-            while (iterator.hasNext()) {
-                final Entry<Key, Value> entry = iterator.next();
-                final Key key = entry.getKey();
-                final Value value = entry.getValue();
-                log.info(key.getRow() + " ==> " + value.toString());
-            }
+            // Scan data
+            TestUtils.printOverlapScanner(overlapList);
 
             final Set<String> overlaps = overlapList.getOverlaps();
 
@@ -92,5 +77,7 @@ public class AccumuloOverlapListTest {
                 log.info(overlap);
             }
         }
+
+        log.info("Finished " + AccumuloOverlapListTest.class.getSimpleName());
     }
 }

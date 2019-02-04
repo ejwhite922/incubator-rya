@@ -77,5 +77,7 @@ public class QueryTest {
             closeConnection(con1);
             closeRepository(repo1);
         }
+
+        log.info("Finished " + QueryTest.class.getSimpleName());
     }
 }
