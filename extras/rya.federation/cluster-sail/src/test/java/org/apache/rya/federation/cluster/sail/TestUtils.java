@@ -20,7 +20,10 @@ package org.apache.rya.federation.cluster.sail;
 
 import static java.util.Objects.requireNonNull;
 
+import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -58,6 +61,8 @@ import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
 import org.openrdf.repository.RepositoryResult;
+import org.openrdf.rio.RDFFormat;
+import org.openrdf.rio.RDFParseException;
 import org.openrdf.sail.Sail;
 import org.openrdf.sail.SailException;
 import org.slf4j.Logger;
@@ -72,6 +77,13 @@ public final class TestUtils {
     private static final Logger log = LoggerFactory.getLogger(TestUtils.class);
 
     private static final ValueFactory VF = ValueFactoryImpl.getInstance();
+
+    private static final String TEST_FILE_DIR = "src/test/resources/rdf_format_files/";
+
+    public static final File LUBM_FILE_0 = Paths.get(TEST_FILE_DIR + "LUBM_1-0.nt").toFile();
+    public static final File LUBM_FILE_1 = Paths.get(TEST_FILE_DIR + "LUBM_1-1.nt").toFile();
+    public static final File LUBM_FILE_2 = Paths.get(TEST_FILE_DIR + "LUBM_1-2.nt").toFile();
+    public static final File LUBM_FILE_3 = Paths.get(TEST_FILE_DIR + "LUBM_1-3.nt").toFile();
 
     /**
      * Private constructor to prevent instantiation.
@@ -309,6 +321,63 @@ public final class TestUtils {
             final RepositoryResult<Statement> result = conn.getStatements(null,  null,  null, true);
             final List<Statement> statements = Iterations.asList(result);
             return statements;
+        } finally {
+            if (conn != null) {
+                conn.close();
+            }
+        }
+    }
+
+    /**
+     * Adds triples to the connection from the specified triples file in
+     * supplied RDF format.
+     * @param conn the {@link RepositoryConnection}. (not null)
+     * @param triplesFile the triples {@link File}. (not null)
+     * @param rdfFormat the {@link RDFFormat}. (not null)
+     * @throws RDFParseException
+     * @throws RepositoryException
+     * @throws IOException
+     */
+    public static void addTriples(final RepositoryConnection conn, final File triplesFile, final RDFFormat rdfFormat) throws RDFParseException, RepositoryException, IOException {
+        requireNonNull(conn);
+        requireNonNull(triplesFile);
+        requireNonNull(rdfFormat);
+        conn.begin();
+        conn.add(triplesFile, "", rdfFormat);
+        conn.commit();
+    }
+
+    /**
+     * Adds triples to the repository from the specified triples file in
+     * N-Triples format.
+     * @param repository the {@link Repository}. (not null)
+     * @param triplesFile the triples {@link File}. (not null)
+     * @throws RDFParseException
+     * @throws RepositoryException
+     * @throws IOException
+     */
+    public static void addTriples(final Repository repository, final File triplesFile) throws RDFParseException, RepositoryException, IOException {
+        addTriples(repository, triplesFile, RDFFormat.NTRIPLES);
+    }
+
+    /**
+     * Adds triples to the repository from the specified triples file in
+     * supplied RDF format.
+     * @param repository the {@link Repository}. (not null)
+     * @param triplesFile the triples {@link File}. (not null)
+     * @param rdfFormat the {@link RDFFormat}. (not null)
+     * @throws RDFParseException
+     * @throws RepositoryException
+     * @throws IOException
+     */
+    public static void addTriples(final Repository repository, final File triplesFile, final RDFFormat rdfFormat) throws RDFParseException, RepositoryException, IOException {
+        requireNonNull(repository);
+        requireNonNull(triplesFile);
+        requireNonNull(rdfFormat);
+        RepositoryConnection conn = null;
+        try {
+            conn = repository.getConnection();
+            addTriples(conn, triplesFile, rdfFormat);
         } finally {
             if (conn != null) {
                 conn.close();
