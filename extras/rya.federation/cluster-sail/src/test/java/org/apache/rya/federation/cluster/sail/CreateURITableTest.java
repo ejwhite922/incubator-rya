@@ -29,6 +29,7 @@ import java.util.Set;
 import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.client.Instance;
 import org.apache.accumulo.core.client.Scanner;
+import org.apache.accumulo.core.client.TableNotFoundException;
 import org.apache.accumulo.core.client.ZooKeeperInstance;
 import org.apache.accumulo.core.client.admin.TableOperations;
 import org.apache.accumulo.core.client.security.tokens.PasswordToken;
@@ -44,14 +45,23 @@ import org.slf4j.LoggerFactory;
 public class CreateURITableTest {
     private static final Logger log = LoggerFactory.getLogger(CreateURITableTest.class);
 
-    private static Set<String> scan(final Scanner scanner) {
+    private static Set<String> scan(final Connector conn, final String tableName) throws TableNotFoundException {
         final Set<String> list = new HashSet<>();
 
-        final Iterator<Entry<Key, Value>> iterator = scanner.iterator();
-        while (iterator.hasNext()) {
-            final Entry<Key, Value> entry = iterator.next();
-            final String[] pattern = entry.getKey().getRow().toString().split("\\x00");
-            list.add(pattern[0]);
+        Scanner scanner = null;
+        try {
+            scanner = conn.createScanner(tableName, new Authorizations());
+
+            final Iterator<Entry<Key, Value>> iterator = scanner.iterator();
+            while (iterator.hasNext()) {
+                final Entry<Key, Value> entry = iterator.next();
+                final String[] pattern = entry.getKey().getRow().toString().split("\\x00");
+                list.add(pattern[0]);
+            }
+        } finally {
+            if (scanner != null) {
+                scanner.close();
+            }
         }
 
         return list;
@@ -80,17 +90,12 @@ public class CreateURITableTest {
         final Instance inst2 = new ZooKeeperInstance(instanceName, zkServer2);
         final Connector conn2 = inst2.getConnector(username, new PasswordToken(password));
 
-        final Scanner scan1SPO = conn1.createScanner(tableSPO, new Authorizations());
-        final Scanner scan1OSP = conn1.createScanner(tableOSP, new Authorizations());
-        final Scanner scan2SPO = conn2.createScanner(tableSPO, new Authorizations());
-        final Scanner scan2OSP = conn2.createScanner(tableOSP, new Authorizations());
-
         final long start = System.currentTimeMillis();
 
-        list.addAll(scan(scan1SPO));
-        list.addAll(scan(scan1OSP));
-        list.addAll(scan(scan2SPO));
-        list.addAll(scan(scan2OSP));
+        list.addAll(scan(conn1, tableSPO));
+        list.addAll(scan(conn1, tableOSP));
+        list.addAll(scan(conn2, tableSPO));
+        list.addAll(scan(conn2, tableOSP));
 
         final TableOperations ops = conn1.tableOperations();
         if (!ops.exists(tableURI)) {

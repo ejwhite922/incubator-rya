@@ -24,6 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
@@ -39,7 +40,15 @@ import org.apache.accumulo.core.data.Mutation;
 import org.apache.accumulo.core.data.Value;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.hadoop.io.Text;
+import org.apache.rya.api.RdfCloudTripleStoreConfiguration;
+import org.apache.rya.api.persist.RyaDAOException;
 import org.apache.rya.federation.cluster.sail.overlap.AccumuloOverlapList;
+import org.apache.rya.rdftriplestore.RyaSailRepository;
+import org.apache.rya.rdftriplestore.inference.InferenceEngineException;
+import org.apache.rya.sail.config.RyaSailFactory;
+import org.openrdf.model.Statement;
+import org.openrdf.model.ValueFactory;
+import org.openrdf.model.impl.ValueFactoryImpl;
 import org.openrdf.query.MalformedQueryException;
 import org.openrdf.query.QueryEvaluationException;
 import org.openrdf.query.QueryLanguage;
@@ -48,14 +57,21 @@ import org.openrdf.query.TupleQueryResultHandlerException;
 import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
+import org.openrdf.repository.RepositoryResult;
+import org.openrdf.sail.Sail;
+import org.openrdf.sail.SailException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import info.aduna.iteration.Iterations;
 
 /**
  * Utility methods and constant used for testing.
  */
 public final class TestUtils {
     private static final Logger log = LoggerFactory.getLogger(TestUtils.class);
+
+    private static final ValueFactory VF = ValueFactoryImpl.getInstance();
 
     /**
      * Private constructor to prevent instantiation.
@@ -225,6 +241,77 @@ public final class TestUtils {
                 final Key key = entry.getKey();
                 final Value value = entry.getValue();
                 log.info(key.getRow() + " ==> " + value.toString());
+            }
+        }
+    }
+
+    /**
+     * Adds statements to the repository.
+     * @param repository the {@link Repository}. (not null)
+     * @param statements the {@link List} of {@link Statement}s to add.
+     * (not null)
+     * @throws RepositoryException
+     */
+    public static void addStatements(final Repository repository, final List<Statement> statements) throws RepositoryException {
+        requireNonNull(repository);
+        requireNonNull(statements);
+        RepositoryConnection conn = null;
+        try {
+            conn = repository.getConnection();
+            conn.add(statements);
+        } finally {
+            if (conn != null) {
+                conn.close();
+            }
+        }
+    }
+
+    /**
+     * Creates a {@link RyaSailRepository} from the specified configuration.
+     * @param config the {@link RdfCloudTripleStoreConfiguration}. (not null)
+     * @return the {@link RyaSailRepository}.
+     * @throws SailException
+     * @throws AccumuloException
+     * @throws AccumuloSecurityException
+     * @throws RyaDAOException
+     * @throws InferenceEngineException
+     */
+    public static Repository createRyaSailRepository(final RdfCloudTripleStoreConfiguration config) throws SailException, AccumuloException, AccumuloSecurityException, RyaDAOException, InferenceEngineException {
+        final Sail sail = RyaSailFactory.getInstance(config);
+        final Repository repository = new RyaSailRepository(sail);
+        return repository;
+    }
+
+    /**
+     * Creates a {@link Statement} out of the subject, predicate, and object.
+     * @param subject the subject of the triple.
+     * @param predicate the predicate of the triple.
+     * @param object the object of the triple.
+     * @return the {@link Statement}.
+     */
+    public static Statement createStatement(final String subject, final String predicate, final String object) {
+        return VF.createStatement(VF.createURI(subject), VF.createURI(predicate), VF.createURI(object));
+    }
+
+    /**
+     * Gets all the statements from the specified repository including inferred
+     * ones.
+     * @param repository the {@link Repository}. (not null)
+     * @return the {@link List} of {@link Statement}s.
+     * @throws RepositoryException
+     */
+    public static List<Statement> getAllStatements(final Repository repository) throws RepositoryException {
+        requireNonNull(repository);
+        RepositoryConnection conn = null;
+        try {
+            conn = repository.getConnection();
+
+            final RepositoryResult<Statement> result = conn.getStatements(null,  null,  null, true);
+            final List<Statement> statements = Iterations.asList(result);
+            return statements;
+        } finally {
+            if (conn != null) {
+                conn.close();
             }
         }
     }
