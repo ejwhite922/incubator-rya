@@ -61,7 +61,7 @@ There are two ways to enable the Rya cluster federation feature in openrdf. One 
 
 Another way is to run the provided Java examples of cluster federation. These can be found and run from the test folder of the `rya.federation.cluster.sail` project from the Rya source code. To test cluster federation we created some experiments to compare the execution time of regular federation method and our cluster federation. We chose Lehigh University Benchmark as our benchmark dataset and test queries provided from here. You can reproduce our experiments by using our test code from the test folder.
 
-For example, after uploading the dataset via workbench on each cluster center, you can run `CreateURITableTest`, `CreateBloomFilterTest`, `CreateNewURIIndexTest`, and `CreateOverlapTest` sequentially to generate 0-hop overlap list, then you can run `NHopOverlapTest` to generate N-hop overlap list in Accumulo table.
+For example, first add the data to the clusters with `InsertDataTest`. After uploading the dataset on each cluster center, you can run `CreateURITableTest`, `CreateBloomFilterTest`, `CreateNewURIIndexTest`, and `CreateOverlapTest` sequentially to generate 0-hop overlap list, then you can run `NHopOverlapTest` to generate N-hop overlap list in Accumulo table.
 
 After creating overlap lists on each cluster center, you can run `ComparisonFederationQueryTest` to calculate execution time of regular federation on the cluster coordinator. Or `ClusterFederationQueryTest` to calculate execution time of cluster federation. You can create your own test code and datasets to run your experiments.
 

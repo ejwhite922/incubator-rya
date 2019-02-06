@@ -43,9 +43,13 @@ import org.apache.accumulo.core.data.Mutation;
 import org.apache.accumulo.core.data.Value;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.hadoop.io.Text;
+import org.apache.rya.accumulo.AccumuloRdfConfiguration;
+import org.apache.rya.accumulo.AccumuloRdfConfigurationBuilder;
 import org.apache.rya.api.RdfCloudTripleStoreConfiguration;
 import org.apache.rya.api.persist.RyaDAOException;
 import org.apache.rya.federation.cluster.sail.overlap.AccumuloOverlapList;
+import org.apache.rya.mongodb.MongoDBRdfConfiguration;
+import org.apache.rya.mongodb.MongoDBRdfConfigurationBuilder;
 import org.apache.rya.rdftriplestore.RyaSailRepository;
 import org.apache.rya.rdftriplestore.inference.InferenceEngineException;
 import org.apache.rya.sail.config.RyaSailFactory;
@@ -80,10 +84,10 @@ public final class TestUtils {
 
     private static final String TEST_FILE_DIR = "src/test/resources/rdf_format_files/";
 
-    public static final File LUBM_FILE_0 = Paths.get(TEST_FILE_DIR + "LUBM_1-0.nt").toFile();
-    public static final File LUBM_FILE_1 = Paths.get(TEST_FILE_DIR + "LUBM_1-1.nt").toFile();
-    public static final File LUBM_FILE_2 = Paths.get(TEST_FILE_DIR + "LUBM_1-2.nt").toFile();
-    public static final File LUBM_FILE_3 = Paths.get(TEST_FILE_DIR + "LUBM_1-3.nt").toFile();
+    public static final File LUBM_FILE_1 = Paths.get(TEST_FILE_DIR + "LUBM_1-0.nt").toFile();
+    public static final File LUBM_FILE_2 = Paths.get(TEST_FILE_DIR + "LUBM_1-1.nt").toFile();
+    public static final File LUBM_FILE_3 = Paths.get(TEST_FILE_DIR + "LUBM_1-2.nt").toFile();
+    public static final File LUBM_FILE_4 = Paths.get(TEST_FILE_DIR + "LUBM_1-3.nt").toFile();
 
     /**
      * Private constructor to prevent instantiation.
@@ -383,5 +387,38 @@ public final class TestUtils {
                 conn.close();
             }
         }
+    }
+
+    /**
+     * Creates a basic {@link AccumuloRdfConfiguration} that connects to the VM
+     * machine with the specified zookeepers.
+     * @param zookeepers the Accumulo zookeepers. (not null)
+     * @return the {@link AccumuloRdfConfiguration}.
+     */
+    public static AccumuloRdfConfiguration createAccumuloRdfConfiguration(final String zookeepers) {
+        requireNonNull(zookeepers);
+        final AccumuloRdfConfigurationBuilder builder = new AccumuloRdfConfigurationBuilder();
+        builder.setAccumuloInstance("rya_instance");
+        builder.setAccumuloZooKeepers(zookeepers);
+        builder.setAccumuloUser("admin");
+        builder.setAccumuloPassword("secret");
+        return builder.build();
+    }
+
+    /**
+     * Creates a basic {@link MongoDBRdfConfiguration} that connects to the VM
+     * machine with the specified hostname.
+     * @param hostname the MongoDB hostname. (not null)
+     * @return the {@link MongoDBRdfConfiguration}.
+     */
+    public static MongoDBRdfConfiguration createMongoDBRdfConfiguration(final String hostname) {
+        requireNonNull(hostname);
+        final MongoDBRdfConfigurationBuilder builder = new MongoDBRdfConfigurationBuilder();
+        builder.setMongoDBName("rya_instance");
+        builder.setMongoHost(hostname);
+        builder.setMongoPort("27017");
+        builder.setMongoUser(null);
+        builder.setMongoPassword(null);
+        return builder.build();
     }
 }
