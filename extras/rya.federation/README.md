@@ -27,7 +27,7 @@ Federated RDF systems allow users to retrieve data from multiple independent sou
 - [Requirements](#requirements)
 - [Building](#building)
 - [Using Cluster Federation](#using-cluster-federation)
-- [How to Use](#how-to-use)
+- [Running from Workbench](#running-from-workbench)
 - [License](#license)
 
 ## Requirements
@@ -37,6 +37,8 @@ Federated RDF systems allow users to retrieve data from multiple independent sou
 * One of the following datastores:
     * Accumulo 1.6.4 ([https://archive.apache.org/dist/accumulo/](https://archive.apache.org/dist/accumulo/))
     * MongoDB 3.3.0 ([https://www.mongodb.com/download-center](https://www.mongodb.com/download-center))
+* Docker ([https://docs.docker.com/install/](https://docs.docker.com/install/))
+* Uno ([https://github.com/apache/fluo-uno#installation](https://github.com/apache/fluo-uno#installation))
 
 ## Building
 
@@ -48,22 +50,67 @@ The tests can be skipped by adding `-DskipTests=true` to the Maven build.
 
 ## Using Cluster Federation
 
-To use Rya Cluster Federation, clone the Rya project, build it, and find the resulting `jar` files from `{rya.federation.cluster.sail.project.dir}/target` and `{rya.federation.cluster.runtime.project.dir}/target` directories. The following 2 jars are produced for cluster federation:
+### Setup
+
+Cluster federation uses Docker to provide an example of a running cluster. To
+recreate the environment for this example:
+
+1.  Download and install Docker: [https://docs.docker.com/install/](https://docs.docker.com/install/)
+2.  Run the below command to download uno:  (Further instructions can be found here: [https://github.com/apache/fluo-uno#installation](https://github.com/apache/fluo-uno#installation)): 
+```
+    git clone https://github.com/apache/fluo-uno.git
+```
+
+3.  Get the Dockerfile (`feduno`) and `start.sh` from `src/test/resources/` and put them in the same folder (such as `/vm/`)
+
+4.  Run:
+```
+    docker build -t feduno /vm/
+```
+
+5. Run as many instances as you need in separate terminal/cmd windows, changing the host name for each: 
+```
+    docker run --rm -P --hostname accumulo01 -v /pathToUno/fluo-uno/:/unoShare  feduno /start.sh
+    docker run --rm -P --hostname accumulo02 -v /pathToUno/fluo-uno/:/unoShare  feduno /start.sh
+    docker run --rm -P --hostname accumulo03 -v /pathToUno/fluo-uno/:/unoShare  feduno /start.sh
+    docker run --rm -P --hostname accumulo04 -v /pathToUno/fluo-uno/:/unoShare  feduno /start.sh
+```
+
+6. Add to your `/etc/hosts` file: 
+```
+172.17.0.2 accumulo01 
+172.17.0.3 accumulo02 
+172.17.0.4 accumulo03
+172.17.0.5 accumulo04
+```
+
+7.  Run the example below
+
+### Running Cluster Federation Examples
+
+Some Java examples are provided for cluster federation. These can be found and run from the test folder of the `rya.federation.cluster.sail` project from the Rya source code. To test cluster federation we created some experiments to compare the execution time of regular federation method and our cluster federation. We chose Lehigh University Benchmark as our benchmark dataset and test queries provided from here. You can reproduce our experiments by using our test code from the test folder.
+
+For example, first add the data to the clusters with `InsertDataTest`. This can be done from command line by:
+```
+    mvn exec:java -o -pl extras/rya.federation/cluster-sail \
+-Dexec.mainClass="org.apache.rya.federation.cluster.sail.InsertDataTest" \
+-Dexec.classpathScope=test
+```
+
+After uploading the dataset on each cluster center, you can run `CreateURITableTest`, `CreateBloomFilterTest`, `CreateNewURIIndexTest`, and `CreateOverlapTest` sequentially to generate 0-hop overlap list, then you can run `NHopOverlapTest` to generate N-hop overlap list in Accumulo table.
+
+After creating overlap lists on each cluster center, you can run `ComparisonFederationQueryTest` to calculate execution time of regular federation on the cluster coordinator. Or `ClusterFederationQueryTest` to calculate execution time of cluster federation. You can create your own test code and datasets to run your experiments.
+
+
+## Running from Workbench
+
+Another way to use Rya Cluster Federation is from the openrdf workbench, clone the Rya project, build it, and find the resulting `jar` files from `{rya.federation.cluster.sail.project.dir}/target` and `{rya.federation.cluster.runtime.project.dir}/target` directories. The following 2 jars are produced for cluster federation:
 
   * rya.federation.cluster.sail-3.2.13-incubating-SNAPSHOT.jar
   * rya.federation.cluster.runtime-3.2.13-incubating-SNAPSHOT.jar
   
-Copy these jars to Apache Tomcat's webapps `lib` directory for `openrdf-workbench`. Restart Tomcat.
+Copy these jars to Apache Tomcat's `/var/lib/tomcat7/webapps/`. Copy `create.xsl` and `create-ClusterFederation.xsl` to `/var/lib/tomcat7/webapps/openrdf-workbench/transformations/` and copy the rest three java libraries to both `/var/lib/tomcat7/webapps/openrdf-workbench/WEB-INF/lib/` and `/var/lib/tomcat7/webapps/openrdf-sesame/WEB-INF/lib/`. Then restart your Tomcat service, you can see a new cluster federation option appears on your workbench webpage.
 
-## How to Use
-
-There are two ways to enable the Rya cluster federation feature in openrdf. One is to add the necessary jar files to `/var/lib/tomcat7/webapps/`. Copy `create.xsl` and `create-ClusterFederation.xsl` to `/var/lib/tomcat7/webapps/openrdf-workbench/transformations/` and copy the rest three java libraries to both `/var/lib/tomcat7/webapps/openrdf-workbench/WEB-INF/lib/` and `/var/lib/tomcat7/webapps/openrdf-sesame/WEB-INF/lib/`. Then restart your Tomcat service, you can see a new cluster federation option appears on your workbench webpage.
-
-Another way is to run the provided Java examples of cluster federation. These can be found and run from the test folder of the `rya.federation.cluster.sail` project from the Rya source code. To test cluster federation we created some experiments to compare the execution time of regular federation method and our cluster federation. We chose Lehigh University Benchmark as our benchmark dataset and test queries provided from here. You can reproduce our experiments by using our test code from the test folder.
-
-For example, first add the data to the clusters with `InsertDataTest`. After uploading the dataset on each cluster center, you can run `CreateURITableTest`, `CreateBloomFilterTest`, `CreateNewURIIndexTest`, and `CreateOverlapTest` sequentially to generate 0-hop overlap list, then you can run `NHopOverlapTest` to generate N-hop overlap list in Accumulo table.
-
-After creating overlap lists on each cluster center, you can run `ComparisonFederationQueryTest` to calculate execution time of regular federation on the cluster coordinator. Or `ClusterFederationQueryTest` to calculate execution time of cluster federation. You can create your own test code and datasets to run your experiments.
 
 ## License
 
